@@ -1,9 +1,12 @@
-import React from 'react'
+import React from "react";
+import BlogList from "../components/blog-list";
 
-const Home = () => {
+function App() {
   return (
-    <div>Home</div>
-  )
+    <div>
+      <BlogList />
+    </div>
+  );
 }
 
-export default Home
+export default App;

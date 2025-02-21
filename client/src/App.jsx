@@ -1,35 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
+import React, { useEffect, useState, lazy, Suspense } from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { ScaleLoader } from "react-spinners";
-import { setUserInfo } from "./redux/slice/auth";
 import axios from "axios";
-import Signup from "./pages/Signup";
-import NavbarLayout from "./components/Navbar/navbar-layout";
-import Login from "./pages/Login";
-import Profile from "./pages/Account";
-import Home from "./pages/Home";
-import Landing from "./pages/Landing";
-import Messages from "./pages/Messages";
-import Booking from "./pages/Booking";
-import BlogPost from "./app/blog-post";
-import Payment from "./pages/Payment";
-import Notification from "./pages/Notification";
-import Booked from "./pages/Booked";
-import Account from "./pages/Account";
+import { setUserInfo } from "./redux/slice/auth";
+
+const NavbarLayout = lazy(() => import("./components/Navbar/navbar-layout"));
+const PrivateRoute = lazy(() => import("./hooks/Privetroute"));
+const AuthRoute = lazy(() => import("./hooks/Authroute"));
 
 
-const PrivateRoute = ({ children }) => {
-  const userInfo = useSelector((state) => state.auth.userInfo);
-  const isAuthenticated = !!userInfo;
-  return isAuthenticated ? children : <Navigate to="/login" />;
-};
-
-const AuthRoute = ({ children }) => {
-  const userInfo = useSelector((state) => state.auth.userInfo);
-  const isAuthenticated = !!userInfo;
-  return isAuthenticated ? <Navigate to="/home" /> : children;
-};
+const Landing = lazy(() => import("./pages/Landing"));
+const Signup = lazy(() => import("./pages/Signup"));
+const Login = lazy(() => import("./pages/Login"));
+const Home = lazy(() => import("./pages/Home"));
+const People = lazy(()=>import('./pages/profile'))
+const Messages = lazy(() => import("./pages/Messages"));
+const Booking = lazy(() => import("./pages/Booking"));
+const BlogPost = lazy(() => import("./app/post"));
+const BlogDetial = lazy(()=>import("./app/blog"))
+const Payment = lazy(() => import("./pages/Payment"));
+const Notification = lazy(() => import("./pages/Notification"));
+const Booked = lazy(() => import("./pages/Booked"));
+const Profile = lazy(() => import("./pages/profile"));
+const Account = lazy(() => import("./pages/Account"));
+const Fallback = lazy(() => import("./components/fallback"));
 
 const App = () => {
   const [loading, setLoading] = useState(false);
@@ -38,17 +33,14 @@ const App = () => {
 
   useEffect(() => {
     if (!userInfo) {
-      const getUser = async () => {
+      const fetchUser = async () => {
         setLoading(true);
         try {
           const response = await axios.get("http://localhost:5000/api/auth/profile", { withCredentials: true });
-          console.log(response);
-          
           if (response.status === 200 && response.data.id) {
             dispatch(setUserInfo(response.data));
           } else {
             dispatch(setUserInfo(undefined));
-            console.log("no user info");
           }
         } catch (error) {
           dispatch(setUserInfo(undefined));
@@ -56,38 +48,41 @@ const App = () => {
           setLoading(false);
         }
       };
-
-      getUser();
+      fetchUser();
     }
   }, [userInfo, dispatch]);
 
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen">
-        <ScaleLoader color="#C0C2C9" aria-label="loading" style={{ display: 'block' }} />
+        <ScaleLoader color="#C0C2C9" aria-label="loading" />
       </div>
     );
   }
 
   return (
     <Router>
-      <Routes>
-        <Route path="/" element={<AuthRoute><Landing /></AuthRoute>} />
-        <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
-        <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
-        <Route element={<NavbarLayout />}>
-        <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
-        <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
-        <Route path="/booking" element={<PrivateRoute><Booking /></PrivateRoute>} />
-        <Route path="/post" element={<PrivateRoute><BlogPost/></PrivateRoute>} />
-        <Route path="/payment" element={<PrivateRoute><Payment /></PrivateRoute>} />
-        <Route path="/notification" element={<PrivateRoute><Notification /></PrivateRoute>} />
-        <Route path="/booked" element={<PrivateRoute><Booked /></PrivateRoute>} />
-        <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
-        <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
-        <Route path="*"element={<PrivateRoute><Login /> </PrivateRoute>}/>
-        </Route>
-      </Routes>
+      <Suspense fallback={<div className="flex justify-center items-center h-screen"><ScaleLoader color="#C0C2C9" aria-label="loading" /></div>}>
+        <Routes>
+          <Route path="/" element={<AuthRoute><Landing /></AuthRoute>} />
+          <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
+          <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
+          <Route element={<NavbarLayout />}>
+            <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
+            <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
+            <Route path="/people" element={<PrivateRoute><People/></PrivateRoute>} />
+            <Route path="/booking" element={<PrivateRoute><Booking /></PrivateRoute>} />
+            <Route path="/post" element={<PrivateRoute><BlogPost /></PrivateRoute>} />
+            <Route path="/payment" element={<PrivateRoute><Payment /></PrivateRoute>} />
+            <Route path="/notification" element={<PrivateRoute><Notification /></PrivateRoute>} />
+            <Route path="/booked" element={<PrivateRoute><Booked /></PrivateRoute>} />
+            <Route path="/blog/:id" element={<PrivateRoute><BlogDetial /></PrivateRoute>} />
+            <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
+            <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
+            <Route path="*" element={<PrivateRoute><Fallback /></PrivateRoute>} />
+          </Route>
+        </Routes>
+      </Suspense>
     </Router>
   );
 };

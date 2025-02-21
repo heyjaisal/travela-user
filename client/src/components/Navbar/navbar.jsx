@@ -18,8 +18,6 @@ import {
 import { Avatar, AvatarImage } from "../ui/avatar";
 
 export default function Navigation() {
-
-  
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
 
   useEffect(() => {
@@ -50,9 +48,11 @@ function MobileNavbar() {
 
   return (
     <>
-      {/* Slide-In Sidebar */}
+  
       <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"} transition-transform duration-300 z-50`}
+        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } transition-transform duration-300 z-50`}
       >
         <button
           className="p-4 text-black hover:text-blue-500"
@@ -100,14 +100,16 @@ function MobileNavbar() {
             <Wallet className="w-5 h-5 text-black" />
             <span className="text-black text-lg font-medium">Payment</span>
           </NavLink>
-          
+
           <NavLink
             to="/notifications"
             className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
             onClick={handleNavLinkClick}
           >
             <Bell className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">Notifications</span>
+            <span className="text-black text-lg font-medium">
+              Notifications
+            </span>
           </NavLink>
           <NavLink
             to="/booked"
@@ -125,7 +127,6 @@ function MobileNavbar() {
             <Settings className="w-5 h-5 text-black" />
             <span className="text-black text-lg font-medium">Account</span>
           </NavLink>
-          
         </nav>
       </div>
       {isSidebarOpen && (
@@ -134,8 +135,6 @@ function MobileNavbar() {
           onClick={() => setIsSidebarOpen(false)}
         ></div>
       )}
-
-      {/* Bottom Navigation */}
       {isBottomNavVisible && (
         <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full bg-slate-100 px-4 shadow-lg flex justify-between items-center">
           <button
@@ -165,7 +164,6 @@ function MobileNavbar() {
           >
             <MessageCircle className="w-6 h-6 text-black" />
           </NavLink>
-          
 
           <Avatar
             className="h-6 w-6 md:w-6 md:h-6 rounded-full overflow-hidden cursor-pointer"
@@ -178,10 +176,8 @@ function MobileNavbar() {
                 className="object-cover w-full h-full bg-black"
               />
             ) : (
-              <div className="uppercase h-6 w-6 md:w-6 md:h-6 text-5xl border-[1px] flex items-center justify-center">
-                {firstName
-                  ? firstName.split("").shift()
-                  : email.split("").shift()}
+              <div className="uppercase h-6 w-6 md:w-6 md:h-6 text-2xl border-[1px] flex items-center justify-center">
+                {(firstName || email)?.charAt(0)}
               </div>
             )}
           </Avatar>
@@ -198,12 +194,13 @@ function DesktopSidebar() {
   const [email, setEmail] = useState(userinfo?.email || "");
   const [isHovered, setIsHovered] = useState(false);
 
-  const firstNameInitial =
-    firstName.charAt(0) || email.charAt(0) || "";
+  const firstNameInitial = firstName.charAt(0) || email.charAt(0) || "";
 
   return (
     <div
-      className={`hidden md:flex flex-col ${isHovered ? "w-64" : "w-18"} text-slate-800 h-full transition-all duration-300 top-0 sticky z-10`}
+      className={`hidden md:flex flex-col ${
+        isHovered ? "w-64" : "w-18"
+      } text-slate-800 h-full transition-all duration-300 top-0 sticky z-10`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -222,7 +219,7 @@ function DesktopSidebar() {
               </div>
             )}
           </Avatar>
-          {isHovered && <h1 className="text-xl font-bold">Hello</h1>}
+          {isHovered && <h1 className="text-2xl font-title font-bold">Travela</h1>}
         </div>
       </NavLink>
 
@@ -234,40 +231,35 @@ function DesktopSidebar() {
           label="Messages"
           isHovered={isHovered}
         />
-        
+
         <NavItem
           to="/booking"
           icon={CalendarDays}
           label="Booking"
           isHovered={isHovered}
         />
-      
+
+        <NavItem to="/post" icon={Plus} label="Post" isHovered={isHovered} />
         <NavItem
-          to="/post"
-          icon={Plus}
-          label="Post"
-          isHovered={isHovered}
-        />
-        <NavItem
-          to="/payments"
+          to="/payment"
           icon={Wallet}
           label="Payment"
           isHovered={isHovered}
         />
-        
+
         <NavItem
-          to="/notifications"
+          to="/notification"
           icon={Bell}
           label="Notification"
           isHovered={isHovered}
         />
-          <NavItem
+        <NavItem
           to="/booked"
-          icon={ClipboardList }
+          icon={ClipboardList}
           label="Booked"
           isHovered={isHovered}
         />
-       
+
         <NavItem
           to="/account"
           icon={Settings}
@@ -284,7 +276,9 @@ function NavItem({ to, icon: Icon, label, isHovered }) {
     <NavLink
       to={to}
       className={({ isActive }) =>
-        `flex items-center gap-4 p-3 rounded-xl ${isActive ? "bg-blue-600 text-white" : ""}`
+        `flex items-center gap-4 p-3 rounded-xl ${
+          isActive ? "bg-blue-600 text-white" : ""
+        }`
       }
     >
       <Icon className={`${isHovered ? "text-[1.375rem]" : "text-xl"}`} />

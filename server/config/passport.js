@@ -1,7 +1,6 @@
-// passport.js
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const Host = require('../model/profile');
+const Host = require('../models/User');
 require('dotenv').config();
 
 if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {

@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
-const User = require("../model/profile");
-const Otp = require("../model/otp");
+const User = require("../models/User");
+const Otp = require("../models/Otp");
 const bcrypt = require("bcrypt");
 const transporter  = require("../config/nodemailer");
 
@@ -156,8 +156,6 @@ exports.getUser = async (req, res) => {
     const user = await User.findById(req.userId);
 
     if (!user) return res.status(404).send("USER NOT FOUND");
-    console.log(user.image);
-  
 
     return res.status(200).json({
       id: user._id,

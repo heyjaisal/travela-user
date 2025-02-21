@@ -176,7 +176,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen p-4">
-      {/* Header */}
+ 
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-xl font-bold text-gray-700">
@@ -185,9 +185,8 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="bg-white rounded-lg shadow-lg mt-6 p-6 flex flex-col md:flex-row gap-6">
-        {/* Left Section */}
+    
         <div className="flex flex-col items-center md:w-1/3">
           <div
             className="h-full w-24 md:w-32 md:h-32 relative flex items-center justify-center"
@@ -247,7 +246,6 @@ const Profile = () => {
           </div>
         </div>
 
-        {/* Right Section */}
         <div className="flex-1">
           <div className="mb-4">
             <label className="block text-sm font-semibold text-gray-700">
@@ -383,3 +381,5 @@ const Profile = () => {
 };
 
 export default Profile;
+
+
