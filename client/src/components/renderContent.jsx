@@ -1,4 +1,5 @@
 import React from "react";
+import { Card } from "@/components/ui/card";
 
 const RenderContent = ({ content }) => {
   if (!Array.isArray(content) || content.length === 0) {
@@ -11,18 +12,17 @@ const RenderContent = ({ content }) => {
   }
 
   return (
-    <div>
+    <div className="max-w-3xl mx-auto">
       {blocks.map((block, index) => {
         switch (block.type) {
           case "paragraph":
-            return (
-              <p key={index} className="mb-4">
-                {block.data.text}
-              </p>
-            );
+            return <p key={index} className="mb-4">{block.data.text}</p>;
           case "header":
             return (
-              <h2 key={index} className={`text-${block.data.level === 1 ? "2xl" : "xl"} font-bold mb-4`}>
+              <h2
+                key={index}
+                className={`text-${block.data.level === 1 ? "2xl" : "xl"} font-bold mb-4`}
+              >
                 {block.data.text}
               </h2>
             );
@@ -36,12 +36,16 @@ const RenderContent = ({ content }) => {
             );
           case "image":
             return (
-              <div key={index} className="my-4">
-                <img src={block.data.file.url} alt={block.data.caption} className="w-full rounded-lg" />
+              <Card key={index} className="p-4 my-4">
+                <img
+                  src={block.data.file.url}
+                  alt={block.data.caption}
+                  className="w-full rounded-lg"
+                />
                 {block.data.caption && (
                   <p className="text-center text-gray-600 mt-2">{block.data.caption}</p>
                 )}
-              </div>
+              </Card>
             );
           default:
             return null;

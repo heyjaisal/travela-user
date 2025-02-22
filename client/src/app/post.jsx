@@ -8,7 +8,6 @@ import { ToastContainer, toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { X } from "lucide-react";
-import AsyncSelect from "react-select/async";
 import logo from "../assets/logo.png";
 
 const Blogpost = () => {
@@ -18,7 +17,7 @@ const Blogpost = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [category, setCategory] = useState("");
   const [inputValue, setInputValue] = useState("");
-  const [location, setLocation] = useState(null);
+  const [location, setLocation] = useState(""); // Use an empty string for location
   const navigate = useNavigate();
 
   const handleClose = () => navigate("/");
@@ -35,22 +34,31 @@ const Blogpost = () => {
       const formData = new FormData();
       formData.append("image", file);
       formData.append("type", type);
-      const { data } = await axios.post(`${API_BASE_URL}/api/upload`, formData, { withCredentials: true });
+      const { data } = await axios.post(
+        `${API_BASE_URL}/api/upload`,
+        formData,
+        { withCredentials: true }
+      );
 
       if (type === "thumbnail") setThumbnailUrl(data.imageUrl);
       return { success: 1, file: { url: data.imageUrl } };
     } catch (error) {
       console.error("Error uploading image:", error);
+      toast.error(error.response?.data?.message || "Error uploading image. Please try again.");
       return { success: 0 };
     }
   };
 
   const handleDeleteImage = async (imageUrl, type = "blog") => {
     try {
-      await axios.delete(`${API_BASE_URL}/api/delete`, { withCredentials: true, data: { image: imageUrl, type } });
+      await axios.delete(`${API_BASE_URL}/api/delete`, {
+        withCredentials: true,
+        data: { image: imageUrl, type },
+      });
       if (type === "thumbnail") setThumbnailUrl("");
     } catch (error) {
       console.error("Error deleting image:", error);
+      toast.error(error.response?.data?.message || "Error deleting image. Please try again.");
     }
   };
 
@@ -66,15 +74,19 @@ const Blogpost = () => {
       const content = await editorInstance.current?.save();
       const blogData = { title, content, thumbnail: thumbnailUrl, category, location };
 
-      const response = await axios.post(`${API_BASE_URL}/api/blogs`, blogData, { withCredentials: true });
+      const response = await axios.post(
+        `${API_BASE_URL}/api/blogs`,
+        blogData,
+        { withCredentials: true }
+      );
 
       if (response.status === 201) {
         toast.success("Blog posted successfully");
         setTitle("");
         setThumbnailUrl("");
         setCategory("");
-        inputValue("")
-        setLocation(null);
+        setInputValue("");
+        setLocation("");
         editorInstance.current?.clear();
       } else {
         toast.error("Unexpected response from the server. Please try again.");
@@ -83,24 +95,6 @@ const Blogpost = () => {
       toast.error(error.response?.data?.message || "Failed to save blog. Please try again.");
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const loadLocationOptions = async (inputValue) => {
-    if (!inputValue.trim()) return [];
-
-    try {
-      const { data } = await axios.get(`https://nominatim.openstreetmap.org/search`, {
-        params: { format: "json", q: inputValue },
-      });
-
-      return data.map((place) => ({
-        label: place.display_name,
-        value: place.display_name,
-      }));
-    } catch (error) {
-      console.error("Error loading location options:", error);
-      return [];
     }
   };
 
@@ -120,8 +114,6 @@ const Blogpost = () => {
         },
       });
     }
-  
-    
   }, []);
 
   return (
@@ -166,10 +158,12 @@ const Blogpost = () => {
         </div>
 
         <div className="border p-4 rounded">
-          <AsyncSelect
-            loadOptions={loadLocationOptions}
-            onChange={(selected) => setLocation(selected.value)}
-            placeholder="Search location..."
+          <input
+            type="text"
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
+            placeholder="Enter location (optional)"
+            className="w-full p-2 border rounded"
           />
         </div>
 
@@ -197,7 +191,6 @@ const Blogpost = () => {
             </div>
           )}
         </div>
-    
 
         <Button onClick={handleSaveBlog} disabled={isSaving} className="mt-4 p-2 text-white rounded">
           {isSaving ? "Saving..." : "Publish Blog"}

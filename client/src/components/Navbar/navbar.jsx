@@ -14,6 +14,7 @@ import {
   Bell,
   ClipboardList,
   CalendarDays,
+  User,
 } from "lucide-react";
 import { Avatar, AvatarImage } from "../ui/avatar";
 
@@ -48,7 +49,6 @@ function MobileNavbar() {
 
   return (
     <>
-  
       <div
         className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${
           isSidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -69,6 +69,14 @@ function MobileNavbar() {
             <span className="text-black text-lg font-medium">Home</span>
           </NavLink>
           <NavLink
+            to="/people"
+            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
+            onClick={handleNavLinkClick}
+          >
+            <User className="w-5 h-5 text-black" />
+            <span className="text-black text-lg font-medium">People</span>
+          </NavLink>
+          <NavLink
             to="/messages"
             className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
             onClick={handleNavLinkClick}
@@ -83,14 +91,6 @@ function MobileNavbar() {
           >
             <CalendarDays className="w-5 h-5 text-black" />
             <span className="text-black text-lg font-medium">Bookings</span>
-          </NavLink>
-          <NavLink
-            to="/post"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <Plus className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">Post</span>
           </NavLink>
           <NavLink
             to="/payment"
@@ -219,12 +219,20 @@ function DesktopSidebar() {
               </div>
             )}
           </Avatar>
-          {isHovered && <h1 className="text-2xl font-title font-bold">Travela</h1>}
+          {isHovered && (
+            <h1 className="text-2xl font-title font-bold">Travela</h1>
+          )}
         </div>
       </NavLink>
 
       <nav className="flex-1 m-3 space-y-4">
         <NavItem to="/home" icon={Home} label="Home" isHovered={isHovered} />
+        <NavItem
+          to="/people"
+          icon={User}
+          label="People"
+          isHovered={isHovered}
+        />
         <NavItem
           to="/messages"
           icon={MessageCircle}

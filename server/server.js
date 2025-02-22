@@ -3,16 +3,12 @@ const mongoose = require('mongoose');
 const passport = require('passport');
 const cors = require('cors');
 const session = require('express-session');
-const { ApolloServer } = require("apollo-server-express");
 const cookieParser = require('cookie-parser');
 
 const authRoute = require('./routes/Gauth.routes');
 const authRoutes = require('./routes/auth.routes'); 
 const uploadRoute = require('./routes/upload.routes');
 const blogRoutes = require('./routes/blog.routes');
-
-const typeDefs = require("./graphQl/Shema/blog");
-const resolvers = require("./graphQl/resolvers/blog");
 
 const app = express();
 require('dotenv').config();
@@ -42,15 +38,12 @@ app.use(passport.session());
 
 app.use('/api/auth', authRoutes); 
 app.use('/api', uploadRoute);
-app.use('/api', blogRoutes);
+app.use("/api/blogs", blogRoutes);
 app.use(authRoute);
 app.use('/uploads', express.static("uploads"));
 
 async function startServer() {
-  const server = new ApolloServer({ typeDefs, resolvers });
-  await server.start();
-  server.applyMiddleware({ app });
-
+  
   await mongoose.connect(mongoURL)
     .then(() => console.log('Database connection done'))
     .catch(err => console.log(err.message));

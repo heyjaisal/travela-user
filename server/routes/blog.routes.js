@@ -1,9 +1,11 @@
-const express = require('express')
+const express = require("express");
+const { getBlogs, getBlogById, likeBlog, saveBlog } = require("../controllers/blog.controller");
 const authorization = require("../middleware/authentication");
-const { GetBlog } = require('../controllers/blog.controller');
-
 const router = express.Router();
 
-router.get("/blogs",authorization,GetBlog) 
+router.get("/", getBlogs);
+router.get("/:id", getBlogById);
+router.post("/:id/like",authorization, likeBlog);
+router.post("/:id/save",authorization, saveBlog);
 
 module.exports = router;

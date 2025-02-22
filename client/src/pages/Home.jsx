@@ -1,5 +1,5 @@
 import React from "react";
-import BlogList from "../components/blog-list";
+import BlogList from "../app/blog-list";
 
 function App() {
   return (

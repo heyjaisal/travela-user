@@ -66,6 +66,14 @@
   }
 }
 .codex-editor__redactor {
-  padding-bottom: 200px !important; /* Adjust the value as needed */
+  padding-bottom: 200px !important;
 }
 
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

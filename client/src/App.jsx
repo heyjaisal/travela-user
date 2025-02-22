@@ -14,7 +14,7 @@ const Landing = lazy(() => import("./pages/Landing"));
 const Signup = lazy(() => import("./pages/Signup"));
 const Login = lazy(() => import("./pages/Login"));
 const Home = lazy(() => import("./pages/Home"));
-const People = lazy(()=>import('./pages/profile'))
+const People = lazy(()=>import('./pages/people'))
 const Messages = lazy(() => import("./pages/Messages"));
 const Booking = lazy(() => import("./pages/Booking"));
 const BlogPost = lazy(() => import("./app/post"));
