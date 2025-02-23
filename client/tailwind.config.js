@@ -1,21 +1,27 @@
+import {heroui} from "@heroui/theme"
+
 /** @type {import('tailwindcss').Config} */
-export default {
-    darkMode: ["class"],
-    content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
+module.exports = {
+  content: [
+    "./index.html",
+    "./src/**/*.{ts,tsx,js,jsx}",
+    './src/layouts/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
+    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
+    "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
+  ],
   theme: {
   	extend: {
-		fontFamily:{
-			title: ["Playfair Display", "serif"],
-		},
-  		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  		fontFamily: {
+  			title: [
+  				'Playfair Display',
+  				'serif'
+  			]
   		},
   		colors: {
+  			lightBg: '#F4F7FE',
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
-			  lightBg: '#F4F7FE',
   			card: {
   				DEFAULT: 'hsl(var(--card))',
   				foreground: 'hsl(var(--card-foreground))'
@@ -54,9 +60,14 @@ export default {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			}
+  		},
+  		borderRadius: {
+  			lg: 'var(--radius)',
+  			md: 'calc(var(--radius) - 2px)',
+  			sm: 'calc(var(--radius) - 4px)'
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  darkMode: ["class", "class"],
+  plugins: [heroui(), require("tailwindcss-animate")],
 }
-

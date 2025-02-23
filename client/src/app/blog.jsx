@@ -33,38 +33,39 @@ const BlogDetail = () => {
 
   return (
     <div className="max-w-4xl mx-auto p-4">
-      <div className="flex items-center gap-2 mb-4 " >
-        <h1 className="text-3xl font-bold">{blog.title}</h1>
-      </div>
-      <img
-        src={blog.thumbnail}
-        alt={blog.title}
-        className="w-full h-64 object-cover rounded-lg mb-6"
-      />
+  <div className="flex items-center gap-2 mb-4">
+    <h1 className="text-xl font-semibold whitespace-nowrap overflow-hidden text-ellipsis">
+      {blog.title}
+    </h1>
+  </div>
+  <img
+    src={blog.thumbnail}
+    alt={blog.title}
+    className="w-full h-64 object-cover rounded-lg mb-6"
+  />
 
-      <div className="flex items-center gap-3 mb-4">
-        <Avatar>
-          <AvatarImage src={blog.author?.image} alt={blog.author?.username} />
-          <AvatarFallback>
-            {blog.author?.username?.charAt(0).toUpperCase()}
-          </AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="text-lg font-semibold">{blog.author?.username}</p>
-          <p className="text-gray-500">{new Date(blog.createdAt).toLocaleDateString()}</p>
-        </div>
-      </div>
-
-      <hr className="border-t border-gray-300 my-4" />
-      {blog.location && (
-  <p className="text-gray-500 mb-2">📍 {blog.location}</p>
-)}
-
-
-      
-        <RenderContent content={blog.content} />
-
+  <div className="flex items-center gap-3 mb-4">
+    <Avatar>
+      <AvatarImage src={blog.author?.image} alt={blog.author?.username} />
+      <AvatarFallback>
+        {blog.author?.username?.charAt(0).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+    <div>
+      <p className="text-lg font-semibold">{blog.author?.username}</p>
+      <p className="text-gray-500">{new Date(blog.createdAt).toLocaleDateString()}</p>
     </div>
+  </div>
+
+  <hr className="border-t border-gray-300 my-4" />
+
+  {blog.location && (
+    <p className="text-gray-500 mb-2">📍 {blog.location}</p>
+  )}
+
+  <RenderContent content={blog.content} />
+</div>
+
   );
 };
 
