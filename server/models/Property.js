@@ -23,7 +23,11 @@ const propertySchema = new mongoose.Schema(
       required: true,
     },
     address: { type: String, required: true },
-    image: [{ type: String }],
+    city: { type: String, required: true },
+    street: { type: String, required: true },
+    country: { type: String, required: true },
+    state: { type: String, required: true },
+    images: [{ type: String }],
     features: [
       {
         text: {

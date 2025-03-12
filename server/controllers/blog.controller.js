@@ -2,71 +2,108 @@ const Blog = require("../models/Blog");
 
 exports.getBlogs = async (req, res) => {
   try {
-    const { limit = 10, skip = 0, sortBy = "latest" } = req.query;
+    const { limit = 10, skip = 0 } = req.query;
+    const userId = req.userId;
+
     const blogs = await Blog.find()
-      .sort(sortBy === "mostLiked" ? { likesCount: -1 } : { createdAt: -1 })
+      .sort({ createdAt: -1 })
       .skip(Number(skip))
       .limit(Number(limit))
-      .select("id title thumbnail createdAt author location likes")
+      .select("id title thumbnail createdAt author location likes saves") // Ensure 'saves' is selected
       .populate("author", "username image");
-    res.json(blogs);
+
+    const updatedBlogs = blogs.map(blog => ({
+      ...blog.toObject(),
+      isLiked: userId && blog.likes?.some(id => id.toString() === userId),
+      likeCount: blog.likes?.length || 0,
+      isSaved: userId && blog.saves ? blog.saves.includes(userId) : false,
+    }));
+
+    res.json(updatedBlogs);
   } catch (error) {
+    console.error("Error fetching blogs:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 exports.getBlogById = async (req, res) => {
   try {
+    const userId = req.userId;
     const blog = await Blog.findById(req.params.id)
       .select("id title thumbnail createdAt content location author likes")
       .populate("author", "username image");
+
     if (!blog) return res.status(404).json({ error: "Blog not found" });
-    res.json(blog);
+
+    res.json({
+      ...blog._doc,
+      isLiked: userId ? blog.likes.includes(userId) : false,
+      likeCount: blog.likes.length
+    });
   } catch (error) {
+    console.error("Error fetching blog:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
 
-exports.likeBlog = async (req, res) => {
+exports.Like = async (req, res) => {
   try {
+    const { id } = req.params;
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
-    const blog = await Blog.findById(req.params.id);
-    if (!blog) return res.status(404).json({ message: "Blog not found" });
+    const blog = await Blog.findById(id);
+    if (!blog) return res.status(404).json({ error: "Blog not found" });
 
-    if (blog.likedBy.includes(userId)) {
-      return res.status(400).json({ message: "You already liked this blog" });
+    if (!blog.likes) {
+      blog.likes = [];
     }
 
-    blog.likedBy.push(userId);
-    blog.likes = (blog.likes || 0) + 1;
+
+    const isLiked = blog.likes.includes(userId);
+    if (isLiked) {
+      blog.likes = blog.likes.filter(id => id.toString() !== userId);
+    } else {
+      blog.likes.push(userId);
+    }
 
     await blog.save();
 
-    res.json({ likes: blog.likes });
+    res.json({ isLiked: !isLiked, likeCount: blog.likes.length });
   } catch (error) {
-    console.error("Error liking blog:", error);
-    res.status(500).json({ message: "Error liking blog" });
+    console.error("Error toggling like:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };
 
 
-exports.saveBlog = async (req, res) => {
+exports.SaveBlog = async (req, res) => {
   try {
-    const userId = req.userId; 
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    const { id } = req.params;
+    const userId = req.userId;
 
-    const blog = await Blog.findById(req.params.id);
-    if (!blog) return res.status(404).json({ message: "Blog not found" });
-
-    if (!blog.savedBy.includes(userId)) {
-      blog.savedBy.push(userId);
-      await blog.save();
+    const blog = await Blog.findById(id);
+    if (!blog) {
+      return res.status(404).json({ message: "blog not found" });
     }
 
-    res.status(200).json({ message: "Blog saved!" });
+    if (!blog.saves) {
+      blog.saves = [];
+    }
+
+    const isSaved = blog.saves.includes(userId);
+
+    if (isSaved) {
+      blog.saves = blog.saves.filter(savedId => savedId.toString() !== userId);
+    } else {
+      blog.saves.push(userId);
+    }
+
+    await blog.save();
+
+    res.json({ isSaved: !isSaved });
   } catch (error) {
-    res.status(500).json({ message: "Error saving blog" });
+    console.error("error toggling like:", error);
+    res.status(500).json({ error: "Internal server error" });
   }
 };

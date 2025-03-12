@@ -17,10 +17,8 @@ const Blogpost = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [category, setCategory] = useState("");
   const [inputValue, setInputValue] = useState("");
-  const [location, setLocation] = useState(""); // Use an empty string for location
+  const [location, setLocation] = useState(""); 
   const navigate = useNavigate();
-
-  const handleClose = () => navigate("/");
 
   const handleAddCategory = () => {
     if (inputValue.trim()) {
@@ -117,14 +115,11 @@ const Blogpost = () => {
   }, []);
 
   return (
-    <div className="flex justify-center items-start min-h-screen p-4 bg-gray-50">
+    <div className="flex justify-center items-start min-h-screen bg-gray-50 p-5">
       <div className="w-full max-w-4xl space-y-4">
-        <div className="flex items-center justify-between">
-          <img src={logo} alt="logo" className="w-5 h-5" />
+        <div className="flex items-center justify-center">
           <h1 className="text-2xl font-title font-bold">Publish your blog</h1>
-          <button onClick={handleClose} className="text-gray-700">
-            <X className="w-8 h-8" />
-          </button>
+          
         </div>
 
         <ToastContainer position="top-right" autoClose={5000} hideProgressBar={false} />

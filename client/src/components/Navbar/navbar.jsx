@@ -17,6 +17,7 @@ import {
   User,
 } from "lucide-react";
 import { Avatar, AvatarImage } from "../ui/avatar";
+import logo from "../../assets/logo.png";
 
 export default function Navigation() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -31,156 +32,65 @@ export default function Navigation() {
 }
 
 function MobileNavbar() {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [isBottomNavVisible, setIsBottomNavVisible] = useState(true);
+  const [isOpen, setIsOpen] = useState(false);
   const navigate = useNavigate();
   const userinfo = useSelector((state) => state.auth.userInfo);
-  const [image, setImage] = useState(userinfo?.image || null);
-  const [firstName, setFirstName] = useState(userinfo?.firstName || "");
-  const [email, setEmail] = useState(userinfo?.email || "");
+  const image = userinfo?.image || null;
+  const firstName = userinfo?.firstName || "";
+  const email = userinfo?.email || "";
 
-  const handleNavLinkClick = () => {
-    setIsSidebarOpen(false);
-    setIsBottomNavVisible(false);
-  };
-  const handleAvatarClick = () => {
-    navigate("/profile");
-  };
+  const handleNavClick = () => setIsOpen(false);
 
   return (
     <>
-      <div
-        className={`fixed top-0 left-0 h-full w-64 bg-white shadow-lg transform ${
-          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
-        } transition-transform duration-300 z-50`}
-      >
-        <button
-          className="p-4 text-black hover:text-blue-500"
-          onClick={() => setIsSidebarOpen(false)}
-        >
-          <X className="w-6 h-6" />
-        </button>
-        <nav className="flex flex-col space-y-6 px-6 pb-6 pt-3">
-          <NavLink
-            to="/home"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-          >
-            <Home className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">Home</span>
-          </NavLink>
-          <NavLink
-            to="/people"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <User className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">People</span>
-          </NavLink>
-          <NavLink
-            to="/messages"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <MessagesSquare className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">Messages</span>
-          </NavLink>
-          <NavLink
-            to="/booking"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <CalendarDays className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">Bookings</span>
-          </NavLink>
-          <NavLink
-            to="/payment"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <Wallet className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">Payment</span>
-          </NavLink>
-
-          <NavLink
-            to="/notifications"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <Bell className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">
-              Notifications
-            </span>
-          </NavLink>
-          <NavLink
-            to="/booked"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <ClipboardList className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">Booked</span>
-          </NavLink>
-          <NavLink
-            to="/account"
-            className="flex items-center space-x-3 p-3 rounded-lg hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <Settings className="w-5 h-5 text-black" />
-            <span className="text-black text-lg font-medium">Account</span>
-          </NavLink>
-        </nav>
-      </div>
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-black opacity-50 z-40"
-          onClick={() => setIsSidebarOpen(false)}
-        ></div>
-      )}
-      {isBottomNavVisible && (
-        <div className="fixed bottom-0 left-1/2 transform -translate-x-1/2 w-full bg-slate-100 px-4 shadow-lg flex justify-between items-center">
-          <button
-            className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition duration-300"
-            onClick={() => setIsSidebarOpen(true)}
-          >
-            <Menu className="w-6 h-6 text-black" />
-          </button>
-          <NavLink
-            to="/booking"
-            className="flex items-center justify-center p-3 rounded-full hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <FileText className="w-6 h-6 text-black" />
-          </NavLink>
-          <NavLink
-            to="/post"
-            className="absolute bottom-7 left-1/2 transform -translate-x-1/2 bg-blue-500 p-2 rounded-full shadow-lg hover:bg-blue-600 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <Plus className="w-6 h-6 text-white" />
-          </NavLink>
-          <NavLink
-            to="/messages"
-            className="flex items-center justify-center p-3 rounded-full hover:bg-gray-100 transition duration-300"
-            onClick={handleNavLinkClick}
-          >
-            <MessageCircle className="w-6 h-6 text-black" />
-          </NavLink>
-
-          <Avatar
-            className="h-6 w-6 md:w-6 md:h-6 rounded-full overflow-hidden cursor-pointer"
-            onClick={handleAvatarClick}
-          >
+      <div className="fixed top-0 left-0 w-full bg-lightBg text-black flex items-center justify-between px-4 py-3 shadow-md z-50">
+        <Menu className="text-2xl cursor-pointer" onClick={() => setIsOpen(true)} />
+        <img src={logo} alt="logo" className="w-5 h-5" />
+        <div className="flex items-center gap-4">
+          <Plus onClick={() => navigate("/post")} className="text-xl cursor-pointer" />
+          <Avatar className="h-7 w-7 cursor-pointer" onClick={() => navigate("/profile")}>
             {image ? (
-              <AvatarImage
-                src={image}
-                alt="profile"
-                className="object-cover w-full h-full bg-black"
-              />
+              <AvatarImage src={image} alt="Profile" className="w-full h-full" />
             ) : (
-              <div className="uppercase h-6 w-6 md:w-6 md:h-6 text-2xl border-[1px] flex items-center justify-center">
+              <div className="uppercase h-7 w-7 flex items-center justify-center border">
                 {(firstName || email)?.charAt(0)}
               </div>
             )}
           </Avatar>
+        </div>
+      </div>
+
+
+      {isOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex z-50">
+          <div className="w-64 bg-lightBg h-full p-4 flex flex-col gap-4 text-black">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-bold">Travela</h2>
+              <X className="text-2xl cursor-pointer" onClick={() => setIsOpen(false)} />
+            </div>
+            <nav className="flex flex-col gap-4">
+              {[
+                { to: "/home", icon: Home, text: "Home" },
+                { to: "/people", icon: User, text: "People" },
+                { to: "/messages", icon: MessageCircle, text: "Messages" },
+                { to: "/booking", icon: CalendarDays, text: "Bookings" },
+                { to: "/payment", icon: Wallet, text: "Payment" },
+                { to: "/notifications", icon: Bell, text: "Notifications" },
+                { to: "/booked", icon: ClipboardList, text: "Booked" },
+                { to: "/account", icon: Settings, text: "Account" },
+              ].map(({ to, icon: Icon, text }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  className="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-800 hover:text-white transition"
+                  onClick={handleNavClick}
+                >
+                  <Icon className="w-5 h-5" />
+                  <span>{text}</span>
+                </NavLink>
+              ))}
+            </nav>
+          </div>
         </div>
       )}
     </>

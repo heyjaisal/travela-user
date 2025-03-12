@@ -57,6 +57,7 @@ exports.verifyOtp = async (req, res) => {
       email,
       password: hashedPassword,
     });
+    
 
     await Otp.deleteOne({ email });
 

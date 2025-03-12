@@ -9,7 +9,6 @@ import { API_BASE_URL } from "@/utils/constants";
 import { ScaleLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
 
-// Shadcn/ui components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -168,7 +167,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen p-4">
+    <div className="min-h-screen">
       <Card>
         <CardHeader>
           <CardTitle className="text-xl font-bold text-gray-700">

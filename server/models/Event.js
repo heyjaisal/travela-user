@@ -48,11 +48,11 @@ const eventSchema = new mongoose.Schema({
       required: true,
     },
   },
-  address: {
-    type: String,
-    required: true,
-    trim: true,
-  },
+  address: { type: String, required: true },
+    city: { type: String, required: true },
+    street: { type: String, required: true },
+    country: { type: String, required: true },
+    state: { type: String, required: true },
   features: [{
     text: {
       type: String,
@@ -60,16 +60,16 @@ const eventSchema = new mongoose.Schema({
       trim: true,
     },
   }],
-  image:{
+  images: [{
     type: String,
-  },
+  }],
   host: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Host',  
+    ref: 'Host',
     required: true,
   },
 }, { timestamps: true });
 
-const Event = mongoose.model('Event', eventSchema);
+const Events = mongoose.model('Event', eventSchema);
 
-module.exports = Event;
+module.exports = Events;

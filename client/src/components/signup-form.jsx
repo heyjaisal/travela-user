@@ -76,7 +76,6 @@ const Signup = () => {
             withCredentials:true
           }
         );
-        console.log(response);
         setShowOtpPopup(true);
         setError({});
       } catch (err) {
@@ -121,22 +120,22 @@ const Signup = () => {
         <div className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="username">Username</Label>
-            <Input id="username" type="text" placeholder="your username" required value={formData.username} onChange={handleChange} />
+            <Input id="username" type="text" placeholder="your username" value={formData.username} onChange={handleChange} />
             {error.username && <p className="text-red-500 text-sm">{error.username}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="your@gmai.com" required value={formData.email} onChange={handleChange} />
+            <Input id="email" type="email" placeholder="your@gmai.com" value={formData.email} onChange={handleChange} />
             {error.email && <p className="text-red-500 text-sm">{error.email}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="Enter your password" required value={formData.password} onChange={handleChange} />
+            <Input id="password" type="password" placeholder="Enter your password" value={formData.password} onChange={handleChange} />
             {error.password && <p className="text-red-500 text-sm">{error.password}</p>}
           </div>
           <div className="grid gap-2">
             <Label htmlFor="cpassword">Password</Label>
-            <Input id="cpassword" type="password" placeholder="Re-enter your password" required value={formData.cpassword} onChange={handleChange} />
+            <Input id="cpassword" type="password" placeholder="Re-enter your password" value={formData.cpassword} onChange={handleChange} />
             {error.cpassword && <p className="text-red-500 text-sm">{error.cpassword}</p>}
           </div>
           

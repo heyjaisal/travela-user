@@ -67,9 +67,24 @@ exports.deleteImage = async (req, res) => {
 };
 
 exports.BlogPost = async (req, res) => {
-  const { title, content, thumbnail, categories,location } = req.body;
-
   try {
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User  not found." });
+    }
+
+    if (!user.profileSetup) {
+      return res.status(403).json({ message: "Complete your profile to post the blog." });
+    }
+
+    const { title, content, thumbnail, categories, location } = req.body;
+
+
+    if (!title || !content) {
+      return res.status(400).json({ message: "Title and content are required." });
+    }
+
     const newBlog = new Blog({
       title,
       content,

@@ -68,7 +68,7 @@ const LoginForm = ({ className, ...props }) => {
       <div className="grid gap-6">
         <div className="grid gap-2">
           <Label htmlFor="email">Email</Label>
-          <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+          <Input id="email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} />
           {error.email && <p className="text-red-500 text-sm">{error.email}</p>}
         </div>
         <div className="grid gap-2">
@@ -76,7 +76,7 @@ const LoginForm = ({ className, ...props }) => {
             <Label htmlFor="password">Password</Label>
             <a href="#" className="ml-auto text-sm underline-offset-4 hover:underline">Forgot your password?</a>
           </div>
-          <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+          <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
           {error.password && <p className="text-red-500 text-sm">{error.password}</p>}
         </div>
         <Button type="submit" className="w-full">Login</Button>

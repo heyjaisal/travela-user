@@ -6,12 +6,15 @@ module.exports = {
     "./index.html",
     "./src/**/*.{ts,tsx,js,jsx}",
     './src/layouts/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     "./node_modules/@heroui/theme/dist/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
   	extend: {
+		screens: {
+			"3xl": "1920px", // Custom breakpoint for 5 columns at 1920px+
+			"4xl": "2560px", // Custom breakpoint for 6 columns at 2560px+
+		  },
   		fontFamily: {
   			title: [
   				'Playfair Display',
@@ -20,6 +23,10 @@ module.exports = {
   		},
   		colors: {
   			lightBg: '#F4F7FE',
+			  blue: {
+				'200': '#5954E4',
+				'600': '#7B76F1'
+			  },
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {

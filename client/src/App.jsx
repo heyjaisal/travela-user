@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { ScaleLoader } from "react-spinners";
 import axios from "axios";
 import { setUserInfo } from "./redux/slice/auth";
+import Navbar from "./components/Navbar/navbar";
+import BlogDetail from "./app/blog";
 
 const NavbarLayout = lazy(() => import("./components/Navbar/navbar-layout"));
 const PrivateRoute = lazy(() => import("./hooks/Privetroute"));
@@ -30,6 +32,8 @@ const App = () => {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const userInfo = useSelector((state) => state.auth.userInfo);
+  console.log(userInfo);
+  
 
   useEffect(() => {
     if (!userInfo) {
@@ -62,11 +66,13 @@ const App = () => {
 
   return (
     <Router>
+        
       <Suspense fallback={<div className="flex justify-center items-center h-screen"><ScaleLoader color="#C0C2C9" aria-label="loading" /></div>}>
         <Routes>
           <Route path="/" element={<AuthRoute><Landing /></AuthRoute>} />
           <Route path="/signup" element={<AuthRoute><Signup /></AuthRoute>} />
           <Route path="/login" element={<AuthRoute><Login /></AuthRoute>} />
+       
           <Route element={<NavbarLayout />}>
             <Route path="/home" element={<PrivateRoute><Home /></PrivateRoute>} />
             <Route path="/messages" element={<PrivateRoute><Messages /></PrivateRoute>} />
@@ -81,9 +87,13 @@ const App = () => {
             <Route path="/account" element={<PrivateRoute><Account /></PrivateRoute>} />
             <Route path="*" element={<PrivateRoute><Fallback /></PrivateRoute>} />
           </Route>
+          
         </Routes>
       </Suspense>
+   
     </Router>
+  
+
   );
 };
 

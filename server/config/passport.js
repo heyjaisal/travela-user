@@ -15,8 +15,7 @@ passport.use(
       callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:5000/auth/google/callback',
     },
     async (token, tokenSecret, profile, done) => {
-      try {
-        console.log('Google Profiless:', profile); 
+      try { 
 
         if (!profile.emails || profile.emails.length === 0) {
           console.error('Google OAuth did not return an email:', profile); 
@@ -25,8 +24,6 @@ passport.use(
 
         const email = profile.emails[0].value; 
         const profileImage = profile.photos?.[0]?.value || '/no-profile-picture.jpg';
-
-        console.log('Extracted Email:', email);
 
         let host = await Host.findOne({ googleId: profile.id });
 

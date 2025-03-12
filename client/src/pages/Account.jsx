@@ -14,7 +14,7 @@ const Account = () => {
   };
 
   return ( 
-    <div className="p-4 pb-16 bg-lightBg overflow-hidden">
+    <div className="p-4 bg-lightBg overflow-hidden">
       <h1 className="text-xl pl-3.5 pt-2 font-bold">Account</h1>
 
       <div className="flex mb-4 border-b-2 border-gray-300">

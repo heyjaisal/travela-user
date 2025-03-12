@@ -9,6 +9,7 @@ const authRoute = require('./routes/Gauth.routes');
 const authRoutes = require('./routes/auth.routes'); 
 const uploadRoute = require('./routes/upload.routes');
 const blogRoutes = require('./routes/blog.routes');
+const listingRoutes = require('./routes/listing.routes');
 
 const app = express();
 require('dotenv').config();
@@ -39,8 +40,9 @@ app.use(passport.session());
 app.use('/api/auth', authRoutes); 
 app.use('/api', uploadRoute);
 app.use("/api/blogs", blogRoutes);
-app.use(authRoute);
+app.use("/api/listing", listingRoutes);
 app.use('/uploads', express.static("uploads"));
+app.use(authRoute);
 
 async function startServer() {
   
