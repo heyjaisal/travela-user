@@ -2,14 +2,16 @@ const Blog = require("../models/Blog");
 
 exports.getBlogs = async (req, res) => {
   try {
-    const { limit = 10, skip = 0 } = req.query;
+    const { page = 1, limit = 10 } = req.query;
     const userId = req.userId;
+
+    const skip = (Number(page) - 1) * Number(limit);
 
     const blogs = await Blog.find()
       .sort({ createdAt: -1 })
-      .skip(Number(skip))
+      .skip(skip)
       .limit(Number(limit))
-      .select("id title thumbnail createdAt author location likes saves") // Ensure 'saves' is selected
+      .select("id title thumbnail createdAt author location likes saves")
       .populate("author", "username image");
 
     const updatedBlogs = blogs.map(blog => ({
@@ -19,7 +21,10 @@ exports.getBlogs = async (req, res) => {
       isSaved: userId && blog.saves ? blog.saves.includes(userId) : false,
     }));
 
-    res.json(updatedBlogs);
+    const totalBlogs = await Blog.countDocuments();
+    const hasMore = skip + blogs.length < totalBlogs;
+
+    res.json({ data: updatedBlogs, hasMore });
   } catch (error) {
     console.error("Error fetching blogs:", error);
     res.status(500).json({ error: "Internal server error" });
@@ -29,23 +34,19 @@ exports.getBlogs = async (req, res) => {
 
 exports.getBlogById = async (req, res) => {
   try {
-    const userId = req.userId;
     const blog = await Blog.findById(req.params.id)
-      .select("id title thumbnail createdAt content location author likes")
+      .select("id title thumbnail createdAt content location author")
       .populate("author", "username image");
 
     if (!blog) return res.status(404).json({ error: "Blog not found" });
 
-    res.json({
-      ...blog._doc,
-      isLiked: userId ? blog.likes.includes(userId) : false,
-      likeCount: blog.likes.length
-    });
+    res.json(blog);
   } catch (error) {
     console.error("Error fetching blog:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 exports.Like = async (req, res) => {
   try {

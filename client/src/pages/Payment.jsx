@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import PropertyCard from "@/components/blog-card";
+import PropertyCard from "@/blog/blog-card";
 
 
 

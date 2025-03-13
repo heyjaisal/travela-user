@@ -1,7 +1,7 @@
 import React,{useState} from 'react'
 import PropertyList from './Payment';
-import Eventlist from '@/app/event-list';
-import Propertylist from '@/app/property-list';
+import Eventlist from '@/event/event-list';
+import Propertylist from '@/property/property-list';
 
 function Approval() {
   const [activeTab, setActiveTab] = useState("property");

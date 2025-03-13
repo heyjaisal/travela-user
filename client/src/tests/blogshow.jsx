@@ -26,14 +26,24 @@ const RenderContent = ({ content }) => {
                 {block.data.text}
               </h2>
             );
-          case "list":
-            return (
-              <ul key={index} className="list-disc list-inside mb-4">
-                {block.data.items.map((item, i) => (
-                  <li key={i}>{item}</li>
-                ))}
-              </ul>
-            );
+            case "list":
+                return (
+                  <ul key={index} className="list-disc list-inside mb-4">
+                    {block.data.items.map((item, i) => (
+                      <li key={i}>
+                        {item.content}
+                        {item.items && item.items.length > 0 && (
+                          <ul className="list-disc list-inside ml-4">
+                            {item.items.map((subItem, j) => (
+                              <li key={j}>{subItem.content}</li>
+                            ))}
+                          </ul>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                );
+              
           case "image":
             return (
               <Card key={index} className="p-4 my-4">

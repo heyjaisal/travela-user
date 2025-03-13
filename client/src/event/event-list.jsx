@@ -1,4 +1,4 @@
-import EventCard from '@/components/events-card';
+import EventCard from '@/event/events-card';
 import axios from 'axios';
 import React, { useState, useEffect, useRef } from 'react';
 import { ScaleLoader } from 'react-spinners';

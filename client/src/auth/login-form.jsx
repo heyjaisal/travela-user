@@ -21,7 +21,6 @@ const LoginForm = ({ className, ...props }) => {
   const validate = () => {
     let errors = {};
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
 
     if (!email) errors.email = "Email is required";
     else if (!emailRegex.test(email)) errors.email = "Enter a valid email";
@@ -42,7 +41,7 @@ const LoginForm = ({ className, ...props }) => {
         dispatch(setUserInfo(response.data.user));
 
         if (response.data.user.id) {
-          navigate(response.data.user.profileSetup || userInfo.id ? "/home" : "/profile");
+          navigate(response.data.user.profileSetup ? "/home" : "/profile");
         }
       } catch (err) {
         setError(err?.response?.data?.error || "Login failed. Please try again.");
@@ -57,7 +56,6 @@ const LoginForm = ({ className, ...props }) => {
 
   return (
     <form className={cn("flex flex-col gap-6", className)} onSubmit={handleLogin} {...props}>
-      
       <div className="flex justify-center w-full top-4">
         <img src={logo} alt="logo" className="w-5" />
       </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
-import PropertyCard from '@/components/property-card';
+import PropertyCard from '@/property/property-card';
 import { ToastContainer, toast } from 'react-toastify';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import { ScaleLoader } from 'react-spinners';

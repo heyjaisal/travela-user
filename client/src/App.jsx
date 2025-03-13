@@ -5,22 +5,22 @@ import { ScaleLoader } from "react-spinners";
 import axios from "axios";
 import { setUserInfo } from "./redux/slice/auth";
 import Navbar from "./components/Navbar/navbar";
-import BlogDetail from "./app/blog";
+import BlogDetail from "./blog/blog";
 
 const NavbarLayout = lazy(() => import("./components/Navbar/navbar-layout"));
 const PrivateRoute = lazy(() => import("./hooks/Privetroute"));
 const AuthRoute = lazy(() => import("./hooks/Authroute"));
 
 
-const Landing = lazy(() => import("./pages/Landing"));
-const Signup = lazy(() => import("./pages/Signup"));
-const Login = lazy(() => import("./pages/Login"));
+const Landing = lazy(() => import("./landing/Landing"));
+const Signup = lazy(() => import("./auth/Signup"));
+const Login = lazy(() => import("./auth/Login"));
 const Home = lazy(() => import("./pages/Home"));
 const People = lazy(()=>import('./pages/people'))
 const Messages = lazy(() => import("./pages/Messages"));
 const Booking = lazy(() => import("./pages/Booking"));
-const BlogPost = lazy(() => import("./app/post"));
-const BlogDetial = lazy(()=>import("./app/blog"))
+const BlogPost = lazy(() => import("./blog/post"));
+const BlogDetial = lazy(()=>import("./blog/blog"))
 const Payment = lazy(() => import("./pages/Payment"));
 const Notification = lazy(() => import("./pages/Notification"));
 const Booked = lazy(() => import("./pages/Booked"));
