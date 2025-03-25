@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+import axiosInstance from "../utils/axios-instance";
 import { setUserInfo } from "../redux/slice/auth";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ const LoginForm = ({ className, ...props }) => {
     if (validate()) {
       setError("");
       try {
-        const response = await axios.post("http://localhost:5000/api/auth/login", { email, password }, { withCredentials: true });
+        const response = await axiosInstance.post("auth/login", { email, password }, { withCredentials: true });
 
         dispatch(setUserInfo(response.data.user));
 
@@ -55,6 +55,7 @@ const LoginForm = ({ className, ...props }) => {
   };
 
   return (
+    <>
     <form className={cn("flex flex-col gap-6", className)} onSubmit={handleLogin} {...props}>
       <div className="flex justify-center w-full top-4">
         <img src={logo} alt="logo" className="w-5" />
@@ -81,15 +82,17 @@ const LoginForm = ({ className, ...props }) => {
         <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:flex after:items-center after:border-t after:border-border">
           <span className="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
         </div>
-        <Button variant="outline" className="w-full" onClick={handleGoogleSignup}>
+      </div>
+      </form>
+      <Button variant="outline" className="w-full mt-5" onClick={handleGoogleSignup}>
           <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google Logo" className="mr-2" />
           Login with Google
         </Button>
-      </div>
-      <div className="text-center text-sm">
+      <div className="text-center text-sm mt-5">
         Don&apos;t have an account? <a href="/signup" className="underline underline-offset-4">Sign up</a>
       </div>
-    </form>
+      </>
+    
   );
 };
 

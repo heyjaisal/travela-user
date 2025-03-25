@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axios-instance";
 import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { InputOTP, InputOTPGroup, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
@@ -26,7 +26,7 @@ const Signup = () => {
   const [showOtpPopup, setShowOtpPopup] = useState(false);
 
   useEffect(() => {
-    if (userInfo) { // Check if userInfo is defined
+    if (userInfo) { 
       navigate("/home");
     }
   }, [navigate, userInfo]);
@@ -63,7 +63,7 @@ const Signup = () => {
     e.preventDefault();
     if (validateFields()) {
       try {
-        const response = await axios.post("http://localhost:5000/api/auth/send-otp", { email: formData.email }, { withCredentials: true });
+        const response = await axiosInstance.post("/auth/send-otp", { email: formData.email }, { withCredentials: true });
         setShowOtpPopup(true);
         setError({});
       } catch (err) {
@@ -74,9 +74,9 @@ const Signup = () => {
 
   const handleVerifyOtp = async () => {
     try {
-      const response = await axios.post("http://localhost:5000/api/auth/verify-otp", formData);
+      const response = await axiosInstance.post("/auth/verify-otp", formData);
       if (response.status === 201) {
-        dispatch(setUserInfo(response.data.user)); // Optionally set user info after successful verification
+        dispatch(setUserInfo(response.data.user)); 
         navigate("/login");
       }
       setShowOtpPopup(false);
@@ -124,17 +124,19 @@ const Signup = () => {
           <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:flex after:items-center after:border-t after:border-border">
             <span className="relative z-10 bg-background px-2 text-muted-foreground">Or continue with</span>
           </div>
-          <Button variant="outline" className="w-full" onClick={handleGoogleSignup}>
+          
+        </div>
+        </form>
+        <Button variant="outline" className="w-full mt-2" onClick={handleGoogleSignup}>
             <img src="https://img.icons8.com/color/24/000000/google-logo.png" alt="Google Logo" className="mr-2" />
             Sign up with Google
           </Button>
-        </div>
-        <div className="text-center text-sm">
+        <div className="text-center text-sm mt-4">
           Already have an account? <a href="/login" className="underline underline-offset-4">Sign in</a>
         </div>
-      </form>
+     
       {showOtpPopup && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30">
+        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-30 z-50">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-2 text-center">Enter OTP</h3>
             <InputOTP

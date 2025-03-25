@@ -3,24 +3,47 @@ import { motion } from "framer-motion";
 import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "@/utils/axios-instance";
 
-const EventCard = ({ images, eventType, ticketPrice, country, city, _id, onFavoriteToggle, isFavorite }) => {
+const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSaved}) => {
+
+   const [Saved, setIsSaved] = useState(isSaved);
+
+  const handleSave = async (e) => {
+    e.stopPropagation();
+    try {
+      const response = await axiosInstance.post(
+        `/user/save/${_id}`,
+        {type:'event'},
+        { withCredentials: true }
+      );
+      setIsSaved(response.data.isSaved);
+    } catch (error) {
+      console.error("Error saving blog:", error.response?.data || error.message);
+    }
+  };
+
+  const navigate = useNavigate()
   const settings = { dots: true, infinite: true, speed: 500, slidesToShow: 1, slidesToScroll: 1 };
 
+  const handleClick = ()=>{
+    navigate(`/event/${_id}`)
+  }
   return (
-    <div className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg">
-      <button onClick={() => onFavoriteToggle(_id)} className="absolute top-3 right-2 p-2 z-10">
+    <div className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg cursor-pointer" onClick={handleClick}>
+      <button onClick={handleSave} className="absolute top-3 right-2 p-2 z-10">
         <motion.svg
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           stroke="grey"
           strokeWidth="2"
           className="w-6 h-6"
-          animate={{ scale: isFavorite ? 1.2 : 1 }}
+          animate={{ scale: Saved ? 1.2 : 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 10 }}
         >
           <motion.path
-            fill={isFavorite ? "red" : "white"}
+            fill={Saved ? "red" : "white"}
             strokeLinecap="round"
             strokeLinejoin="round"
             strokeWidth="1"
@@ -38,7 +61,7 @@ const EventCard = ({ images, eventType, ticketPrice, country, city, _id, onFavor
       </Slider>
 
       <div className="mt-2 px-1">
-        <h3 className="text-lg font-semibold truncate">{eventType}</h3>
+        <h3 className="text-lg font-semibold truncate">{eventVenue}</h3>
         <p className="text-gray-500 text-sm truncate">{city}, {country}</p>
         <span className="text-lg font-bold">₹{ticketPrice}/<span className="text-red-200 font-thin">ticket</span></span>
       </div>

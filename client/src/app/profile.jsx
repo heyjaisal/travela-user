@@ -1,54 +1,44 @@
 import React, { useState, useEffect, useRef } from "react";
-import axios from "axios";
+import axiosInstance from "../utils/axios-instance";
 import { ToastContainer, toast } from "react-toastify";
 import { useSelector, useDispatch } from "react-redux";
 import { setUserInfo } from "@/redux/slice/auth";
 import { Avatar, AvatarImage } from "@/components/ui/avatar";
 import { FaPlus, FaTrash } from "react-icons/fa";
-import { API_BASE_URL } from "@/utils/constants";
-import { ScaleLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { ScaleLoader } from "react-spinners";
 
-const Profile = () => {
+const ProfileDialog = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const userinfo = useSelector((state) => state.auth.userInfo);
-  const [image, setImage] = useState(userinfo?.image || null);
   const fileInputRef = useRef(null);
+  const [image, setImage] = useState(userinfo?.image || null);
   const [loading, setLoading] = useState(false);
   const [hovered, setHovered] = useState(false);
-  const [errors, setErrors] = useState({});
-
+    const [errors, setErrors] = useState({});
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
     username: "",
+    city: "",
     country: "",
     email: "",
-    phone: "",
-    street: "",
-    city: "",
-    gender: "",
   });
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/auth/profile`, {
-          withCredentials: true,
-        });
+        const response = await axiosInstance.get(`/auth/profile`, { withCredentials: true });
         setProfileData(response.data);
       } catch (error) {
-        console.error("Error fetching user data:", error);
         toast.error("Failed to fetch user data");
       }
     };
-
     fetchData();
   }, []);
 
@@ -63,10 +53,8 @@ const Profile = () => {
     if (!profileData.firstName) tempErrors.firstName = "First name is required";
     if (!profileData.lastName) tempErrors.lastName = "Last name is required";
     if (!profileData.username) tempErrors.username = "Username is required";
-    if (!profileData.street) tempErrors.street = "Street is required";
     if (!profileData.country) tempErrors.country = "Country is required";
     if (!profileData.city) tempErrors.city = "City is required";
-    if (!profileData.gender) tempErrors.gender = "Gender is required";
 
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
@@ -75,28 +63,21 @@ const Profile = () => {
   const handleSave = async () => {
     if (validateFields()) {
       try {
-        const { data } = await axios.put(
-          `${API_BASE_URL}/api/auth/profile`,
+        const { data } = await axiosInstance.put(
+          `/auth/profile`,
           profileData,
           { withCredentials: true }
         );
         dispatch(setUserInfo(data.user));
         toast.success("Profile details submitted successfully!");
       } catch (error) {
-        if (error.response?.data?.message === "Phone number already exists") {
-          setErrors((prev) => ({
-            ...prev,
-            phone: error.response.data.message,
-          }));
-        } else {
-          toast.error("Failed to update profile");
-        }
+        toast.error("Failed to update profile");
       }
     }
   };
-
+  
   const logOut = async () => {
-    const response = await axios.get(`${API_BASE_URL}/api/auth/logout`, {
+    const response = await axiosInstance.get(`/auth/logout`, {
       withCredentials: true,
     });
     if (response.status === 200) {
@@ -115,7 +96,7 @@ const Profile = () => {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${API_BASE_URL}/api/upload`, formData, {
+      const response = await axiosInstance.post(`/upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
         withCredentials: true,
       });
@@ -137,7 +118,7 @@ const Profile = () => {
   const deleteImage = async () => {
     setLoading(true);
     try {
-      const response = await axios.delete(`${API_BASE_URL}/api/delete`, {
+      const response = await axiosInstance.delete(`/delete`, {
         withCredentials: true,
         data: {
           image: image,
@@ -158,55 +139,35 @@ const Profile = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <ScaleLoader color="#4fa94d" aria-label="loading" style={{ display: "block" }} />
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-700">
-            Welcome, {profileData.firstName} {profileData.lastName}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Avatar Section */}
-            <div className="flex flex-col items-center md:w-1/3">
-              <div
-                className="relative w-24 h-24 md:w-32 md:h-32 flex items-center justify-center"
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
-              >
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden">
-                  {image ? (
-                    <AvatarImage src={image} alt="profile" className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full text-5xl border rounded-full">
-                      {profileData.firstName
-                        ? profileData.firstName.charAt(0)
-                        : profileData.email.charAt(0)}
-                    </div>
-                  )}
-                </Avatar>
-                {hovered && (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer"
-                    onClick={image ? deleteImage : () => fileInputRef.current.click()}
-                  >
-                    {image ? (
-                      <FaTrash className="text-white text-3xl" />
-                    ) : (
-                      <FaPlus className="text-white text-3xl" />
-                    )}
-                  </div>
-                )}
-                <input
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">Profile</Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md w-full px-4 py-6 sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="text-lg font-semibold text-center">Edit Profile</DialogTitle>
+        </DialogHeader>
+
+        {/* Profile Picture */}
+        <div className="flex flex-col items-center">
+          <div className="relative w-24 h-24 rounded-full border flex items-center justify-center bg-gray-200"
+               onMouseEnter={() => setHovered(true)}
+               onMouseLeave={() => setHovered(false)}>
+            <Avatar className="w-24 h-24 rounded-full">
+              {image ? <AvatarImage src={image} alt="profile" className="object-cover w-full h-full" /> :
+                <div className="flex items-center justify-center w-full h-full text-5xl font-bold">
+                  {profileData.firstName?.charAt(0)}
+                </div>}
+            </Avatar>
+            {hovered && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer"
+                   onClick={image ? deleteImage : () => fileInputRef.current.click()}>
+                {image ? <FaTrash className="text-white text-3xl" /> : <FaPlus className="text-white text-3xl" />}
+              </div>
+            )}
+            <input
                   type="file"
                   ref={fileInputRef}
                   className="hidden"
@@ -214,134 +175,52 @@ const Profile = () => {
                   name="profile-image"
                   accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
                 />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold">
-                {profileData.firstName} {profileData.lastName}
-              </h3>
-              <div className="mt-2 w-full">
-                <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
-                  Email:
-                </Label>
-                <Input id="email" name="email" value={profileData.email} disabled className="mt-1" />
-              </div>
-            </div>
-
-            {/* Profile Details Section */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <Label htmlFor="firstName" className="text-sm font-semibold text-gray-700">
-                  First Name:
-                </Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  value={profileData.firstName}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
-              </div>
-              <div>
-                <Label htmlFor="lastName" className="text-sm font-semibold text-gray-700">
-                  Last Name:
-                </Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  value={profileData.lastName}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
-              </div>
-              <div>
-                <Label htmlFor="country" className="text-sm font-semibold text-gray-700">
-                  Country:
-                </Label>
-                <Input
-                  id="country"
-                  name="country"
-                  value={profileData.country}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
-              </div>
-              <div>
-                <Label htmlFor="city" className="text-sm font-semibold text-gray-700">
-                  City:
-                </Label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={profileData.city}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
-              </div>
-            </div>
-
-            {/* Account Details Section */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <Label htmlFor="username" className="text-sm font-semibold text-gray-700">
-                  Username:
-                </Label>
-                <Input
-                  id="username"
-                  name="username"
-                  value={profileData.username}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
-              </div>
-              <div>
-                <Label htmlFor="street" className="text-sm font-semibold text-gray-700">
-                  Street:
-                </Label>
-                <Input
-                  id="street"
-                  name="street"
-                  value={profileData.street}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.street && <p className="text-red-500 text-sm mt-1">{errors.street}</p>}
-              </div>
-              <div>
-                <Label htmlFor="gender" className="text-sm font-semibold text-gray-700">
-                  Gender:
-                </Label>
-                <select
-                  id="gender"
-                  name="gender"
-                  value={profileData.gender}
-                  onChange={handleFieldChange}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-                {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
-              </div>
-            </div>
           </div>
-        </CardContent>
-        <CardFooter className="flex justify-end space-x-4">
-          <Button onClick={handleSave} className="bg-blue-500 text-white">
-            Save
-          </Button>
-          <Button onClick={logOut} variant="destructive">
-            Logout
-          </Button>
-        </CardFooter>
-      </Card>
-      <ToastContainer />
-    </div>
+        </div>
+
+        {/* Profile Fields */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
+          <div>
+            <Label>Username</Label>
+            <Input name="username" value={profileData.username} onChange={handleFieldChange} />
+          </div>
+
+          <div>
+            <Label>First Name</Label>
+            <Input name="firstName" value={profileData.firstName} onChange={handleFieldChange} />
+          </div>
+
+          <div>
+            <Label>Last Name</Label>
+            <Input name="lastName" value={profileData.lastName} onChange={handleFieldChange} />
+          </div>
+
+          <div>
+            <Label>City</Label>
+            <Input name="city" value={profileData.city} onChange={handleFieldChange} />
+          </div>
+
+          <div>
+            <Label>Country</Label>
+            <Input name="country" value={profileData.country} onChange={handleFieldChange} />
+          </div>
+
+          <div>
+            <Label>Email</Label>
+            <Input name="email" value={profileData.email} disabled className="bg-gray-100 cursor-not-allowed" />
+          </div>
+        </div>
+
+<div className="flex justify-end space-x-2 mt-6">
+  <Button className="bg-blue-500 text-white px-3 py-1 text-sm">Save</Button>
+  <Button className="bg-red-500 text-white px-3 py-1 text-sm" variant="destructive">Logout</Button>
+</div>
+
+        
+        <ToastContainer />
+      </DialogContent>
+    </Dialog>
   );
 };
 
-export default Profile;
+export default ProfileDialog;

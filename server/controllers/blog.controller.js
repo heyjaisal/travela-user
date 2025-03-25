@@ -76,35 +76,3 @@ exports.Like = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
-
-exports.SaveBlog = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const userId = req.userId;
-
-    const blog = await Blog.findById(id);
-    if (!blog) {
-      return res.status(404).json({ message: "blog not found" });
-    }
-
-    if (!blog.saves) {
-      blog.saves = [];
-    }
-
-    const isSaved = blog.saves.includes(userId);
-
-    if (isSaved) {
-      blog.saves = blog.saves.filter(savedId => savedId.toString() !== userId);
-    } else {
-      blog.saves.push(userId);
-    }
-
-    await blog.save();
-
-    res.json({ isSaved: !isSaved });
-  } catch (error) {
-    console.error("error toggling like:", error);
-    res.status(500).json({ error: "Internal server error" });
-  }
-};

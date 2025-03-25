@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import EditorJS from "@editorjs/editorjs";
 import List from "@editorjs/list";
 import ImageTool from "@editorjs/image";
-import axios from "axios";
+import axiosInstance from "../utils/axios-instance";
 import { API_BASE_URL } from "@/utils/constants";
 import { ToastContainer, toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
@@ -32,8 +32,8 @@ const Blogpost = () => {
       const formData = new FormData();
       formData.append("image", file);
       formData.append("type", type);
-      const { data } = await axios.post(
-        `${API_BASE_URL}/api/upload`,
+      const { data } = await axiosInstance.post(
+        `/upload`,
         formData,
         { withCredentials: true }
       );
@@ -49,7 +49,7 @@ const Blogpost = () => {
 
   const handleDeleteImage = async (imageUrl, type = "blog") => {
     try {
-      await axios.delete(`${API_BASE_URL}/api/delete`, {
+      await axiosInstance.delete(`/delete`, {
         withCredentials: true,
         data: { image: imageUrl, type },
       });
@@ -72,8 +72,8 @@ const Blogpost = () => {
       const content = await editorInstance.current?.save();
       const blogData = { title, content, thumbnail: thumbnailUrl, category, location };
 
-      const response = await axios.post(
-        `${API_BASE_URL}/api/blogs`,
+      const response = await axiosInstance.post(
+        `/blogs`,
         blogData,
         { withCredentials: true }
       );

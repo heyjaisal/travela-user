@@ -6,6 +6,5 @@ const router = express.Router();
 router.get("/",authorization, getBlogs);
 router.get("/:id", getBlogById);
 router.post("/:id/like",authorization,Like);
-router.post("/:id/save",authorization, SaveBlog);
 
 module.exports = router;

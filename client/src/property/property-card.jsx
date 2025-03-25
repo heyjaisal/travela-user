@@ -4,9 +4,32 @@ import Slider from "react-slick";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { FaEllipsisV } from "react-icons/fa";
-import axios from "axios";
+import axiosInstance from "../utils/axios-instance";
+import { useNavigate } from "react-router-dom";
 
-const PropertyCard = ({ images, propertyType, price, country, city, _id,onFavoriteToggle, isFavorite }) => {
+const PropertyCard = ({ images, propertyType, price, country, city, _id,isSaved}) => {
+
+   const [Saved, setIsSaved] = useState(isSaved);
+
+  const navigate = useNavigate()
+
+  const handleClick = ()=>{
+    navigate(`/property/${_id}`)
+  }
+
+  const handleSave = async (e) => {
+    e.stopPropagation();
+    try {
+      const response = await axiosInstance.post(
+        `/user/save/${_id}`,
+        {type:'property'},
+        { withCredentials: true }
+      );
+      setIsSaved(response.data.isSaved);
+    } catch (error) {
+      console.error("Error saving blog:", error.response?.data || error.message);
+    }
+  };
 
   const settings = {
     dots: true,
@@ -17,19 +40,19 @@ const PropertyCard = ({ images, propertyType, price, country, city, _id,onFavori
   };
 
   return (
-    <div className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg">
-      <button onClick={() => onFavoriteToggle(_id)} className="absolute top-3 right-2 p-2 z-10">
+    <div className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg cursor-pointer" onClick={handleClick}>
+      <button onClick={handleSave} className="absolute top-3 right-2 p-2 z-10">
               <motion.svg
                 xmlns="http://www.w3.org/2000/svg"
                 viewBox="0 0 24 24"
                 stroke="grey"
                 strokeWidth="2"
                 className="w-6 h-6"
-                animate={{ scale: isFavorite ? 1.2 : 1 }}
+                animate={{ scale: Saved ? 1.2 : 1 }}
                 transition={{ type: "spring", stiffness: 300, damping: 10 }}
               >
                 <motion.path
-                  fill={isFavorite ? "red" : "white"}
+                  fill={Saved ? "red" : "white"}
                   strokeLinecap="round"
                   strokeLinejoin="round"
                   strokeWidth="1"

@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Heart } from "lucide-react";
-import axios from "axios";
+import axiosInstance from "../utils/axios-instance";
 
 const BlogCard = ({ blog }) => {
   const navigate = useNavigate();
@@ -15,9 +15,9 @@ const BlogCard = ({ blog }) => {
   const handleLike = async (e) => {
     e.stopPropagation();
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/blogs/${blog._id}/like`,
-        {},
+      const response = await axiosInstance.post(
+        `/blogs/${blog._id}/like`,
+        {type:"blog"},
         { withCredentials: true }
       );
       setIsLiked(response.data.isLiked);
@@ -30,9 +30,9 @@ const BlogCard = ({ blog }) => {
   const handleSave = async (e) => {
     e.stopPropagation();
     try {
-      const response = await axios.post(
-        `http://localhost:5000/api/blogs/${blog._id}/save`,
-        {},
+      const response = await axiosInstance.post(
+        `/user/save/${blog._id}`,
+        {type:'blog'},
         { withCredentials: true }
       );
       setIsSaved(response.data.isSaved);

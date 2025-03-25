@@ -1,102 +1,78 @@
-import EventCard from '@/event/events-card';
-import axios from 'axios';
 import React, { useState, useEffect, useRef } from 'react';
-import { ScaleLoader } from 'react-spinners';
-import { ToastContainer, toast } from 'react-toastify';
+import axios from 'axios';
 import InfiniteScroll from 'react-infinite-scroll-component';
+import EventCard from '@/event/events-card';
 import { FaSearch } from 'react-icons/fa';
+import { ScaleLoader } from 'react-spinners';
+import axiosInstance from '@/utils/axios-instance';
 
 function Eventlist() {
     const [events, setEvents] = useState([]);
-    const [searchTerm, setSearchTerm] = useState('');
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
-    const [loading, setLoading] = useState(true);
-    const [favorites, setFavorites] = useState(new Set());
+    const [search, setSearch] = useState("");
     const isLoading = useRef(false);
 
-    const fetchEvents = async () => {
-        if (isLoading.current) return; 
+    const fetchEvents = async (reset = false) => {
+        if (isLoading.current) return;
         isLoading.current = true;
-        setLoading(true);
-        
+
         try {
-          const { data } = await axios.get('http://localhost:5000/api/listing/all-items',{withCredentials:true}, {
-            params: { type: 'events', page, limit: 10, search: searchTerm },
-          });
-    
-          const newData = data.data.filter(
-            (newItem) => !events.some((item) => item._id === newItem._id)
-          );
-    
-          setEvents((prev) => [...prev, ...newData]);
-          setHasMore(data.hasMore);
-          setPage((prev) => prev + 1);
+            const { data } = await axiosInstance.get('/listing/all-items', {
+                params: { type: 'event', page, limit: 6, search },
+                withCredentials: true,
+            });
+
+            if (!data?.listings || !Array.isArray(data.listings)) {
+                throw new Error("Invalid API response");
+            }
+
+            setEvents((prev) => reset ? data.listings : [...prev, ...data.listings]);
+            setHasMore(data.hasMore);
+            setPage((prev) => prev + 1);
         } catch (error) {
-          toast.error("Failed to load events");
+            console.error("Fetch error:", error.message);
         } finally {
-          setLoading(false);
-          isLoading.current = false;
+            isLoading.current = false;
         }
     };
 
-    const handleSearch = (e) => {
-        setSearchTerm(e.target.value);
-        setPage(1);
-        setEvents([]);
-    };
-
     useEffect(() => {
-        fetchEvents();
-    }, [searchTerm]);
-
-    const toggleFavorite = (id) => {
-        setFavorites((prev) => {
-          const newFavorites = new Set(prev);
-          newFavorites.has(id) ? newFavorites.delete(id) : newFavorites.add(id);
-          return newFavorites;
-        });
-      };
+        fetchEvents(true);
+    }, [search]);
 
     return (
-        <>
-         <div className="mx-auto">
-            <ToastContainer />
+        <div>
             <div className="flex justify-center">
-                <div className="relative w-1/2">
-                    <input
-                        type="text"
-                        placeholder="Search events..."
-                        value={searchTerm}
-                        onChange={handleSearch}
-                        className="w-full p-3 pl-10 border rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                </div>
+            <div className="relative w-1/2">
+            <input
+                type="text"
+                placeholder="Search events..."
+                            className="w-full p-3 pl-10 border rounded-full shadow-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={search}
+                onChange={(e) => {
+                    setSearch(e.target.value);
+                    setPage(1);
+                    setHasMore(true);
+                }}
+            />
+              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            </div>
             </div>
             <InfiniteScroll
                 dataLength={events.length}
-                next={fetchEvents}
-                hasMore={hasMore}
+                next={() => fetchEvents()}
                 loader={<div className="flex justify-center"><ScaleLoader color="#C0C2C9" /></div>}
-                endMessage={<div className="text-center text-gray-500 py-4">No more events</div>}
+                hasMore={hasMore}
             >
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-4 3xl:grid-cols-6 gap-6 px-5 p-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4 3xl:grid-cols-6 gap-6 px-5 p-4">
                     {events.map((event) => (
-                        <EventCard 
-                            key={event._id} 
-                            {...event} 
-                            images={event.images || []} 
-                            country={event.country || "Unknown"} 
-                            city={event.city || "Unknown"} 
-                            onFavoriteToggle={toggleFavorite} 
-                            isFavorite={favorites.has(event._id)} 
-                        />
+                        <EventCard key={event._id} {...event} />
                     ))}
                 </div>
             </InfiniteScroll>
-            </div>
-        </>
-    )};
+        </div>
+    );
+}
 
-    export default Eventlist;
+export default Eventlist;

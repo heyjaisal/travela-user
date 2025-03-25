@@ -37,11 +37,13 @@ const propertySchema = new mongoose.Schema(
         },
       },
     ],
+        saves: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     host: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Host",
       required: true,
     },
+    
   },
   { timestamps: true }
 );

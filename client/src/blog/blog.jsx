@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import axiosInstance from "../utils/axios-instance";
 import { ScaleLoader } from "react-spinners";
 import RenderContent from "./renderContent";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -13,7 +13,7 @@ const BlogDetail = () => {
   useEffect(() => {
     const fetchBlog = async () => {
       try {
-        const { data } = await axios.get(`http://localhost:5000/api/blogs/${id}`, { withCredentials: true });
+        const { data } = await axiosInstance.get(`/blogs/${id}`, { withCredentials: true });
         setBlog(data);
       } catch (error) {
         console.error("Error fetching blog:", error.response?.data || error.message);
@@ -57,6 +57,7 @@ const BlogDetail = () => {
       {blog.location && <p className="text-gray-500 mb-2">📍 {blog.location}</p>}
 
       <RenderContent content={blog.content} />
+      
     </div>
   );
 };

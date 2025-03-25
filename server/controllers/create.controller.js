@@ -2,6 +2,7 @@ const User = require("../models/User");
 const Blog = require("../models/Blog");
 const cloudinary = require("../config/cloudinary");
 
+
 exports.uploadImage = async (req, res) => {
   try {
     if (!req.file) {
@@ -16,15 +17,23 @@ exports.uploadImage = async (req, res) => {
 
     const folder = folderMap[req.body.type] || "default-images";
 
-    const { secure_url: imageUrl, public_id } =
-      await cloudinary.uploader.upload(req.file.path, { folder });
+    const uploadToCloudinary = (fileBuffer, folder) => {
+      return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+          { folder },
+          (error, result) => {
+            if (error) return reject(error);
+            resolve(result);
+          }
+        );
+        stream.end(fileBuffer);
+      });
+    };
+
+    const { secure_url: imageUrl, public_id } = await uploadToCloudinary(req.file.buffer, folder);
 
     if (req.body.type === "profile") {
-      const updatedUser = await User.findByIdAndUpdate(
-        req.userId,
-        { image: imageUrl },
-        { new: true }
-      );
+      await User.findByIdAndUpdate(req.userId, { image: imageUrl }, { new: true });
     }
 
     res.status(200).json({ imageUrl, public_id, type: req.body.type });
@@ -71,7 +80,7 @@ exports.BlogPost = async (req, res) => {
     const user = await User.findById(req.userId);
 
     if (!user) {
-      return res.status(404).json({ message: "User  not found." });
+      return res.status(404).json({ message: "User not found." });
     }
 
     if (!user.profileSetup) {
@@ -79,7 +88,6 @@ exports.BlogPost = async (req, res) => {
     }
 
     const { title, content, thumbnail, categories, location } = req.body;
-
 
     if (!title || !content) {
       return res.status(400).json({ message: "Title and content are required." });
@@ -95,6 +103,10 @@ exports.BlogPost = async (req, res) => {
     });
 
     await newBlog.save();
+
+    user.blogs.push(newBlog._id);
+    await user.save();
+
     res.status(201).json({ message: "Blog saved successfully!", blog: newBlog });
   } catch (error) {
     console.error("Error saving blog:", error);

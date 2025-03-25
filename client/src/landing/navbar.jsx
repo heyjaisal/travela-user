@@ -1,38 +1,137 @@
-import { Menu } from "lucide-react";
-import { useState } from "react";
+import * as React from "react";
 import { useNavigate } from "react-router-dom";
+import { useSelector, useDispatch } from "react-redux";
+import { setUserInfo } from "@/redux/slice/auth";
+import { Button } from "@/components/ui/button";
+import {
+  Navbar,
+  NavbarBrand,
+  NavbarMenuToggle,
+  NavbarMenuItem,
+  NavbarMenu,
+  NavbarContent,
+  NavbarItem,
+  Link,
+} from "@heroui/react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { SquarePen } from "lucide-react";
+import ProfileDialog from "@/app/profile";
+import logo from "../assets/logo.png";
+import axiosInstance from "@/utils/axios-instance";
 
-export default function Navbar() {
-  const [isOpen, setIsOpen] = useState(false);
-  const navigate = useNavigate()
+const navItems = [
+  { label: "Features", id: "/" },
+  { label: "Listing", id: "/booking" },
+  { label: "Blogs", id: "/blogs" },
+  { label: "About us", id: "/aboutus" },
+];
 
-  
+export default function NavbarComponent() {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const userinfo = useSelector((state) => state.auth.userInfo);
+
+  const logOut = async () => {
+    const response = await axiosInstance.get(`/auth/logout`, {
+      withCredentials: true,
+    });
+    if (response.status === 200) {
+      dispatch(setUserInfo(undefined));
+      navigate("/login");
+    }
+  };
 
   return (
-    <nav className="bg-gray-900 text-white p-2 flex justify-between items-center">
-      <div className="flex items-center space-x-2">
-        <div className="w-8 h-8 bg-gray-500 rounded" /> {/* Placeholder for Logo */}
-        <span className="text-lg font-semibold">Travela</span>
-      </div>
-      <div className="hidden md:flex space-x-6">
-        <a href="#" className="hover:text-gray-400 transition pt-1">Contact us</a>
-        <a href="#" className="hover:text-gray-400 transition pt-1">Login</a>
-        <button className="bg-blue-500 px-4 py-1 rounded-full hover:bg-blue-600 transition font-mono">
-          Sign Up
-        </button>
-      </div>
-      <button className="md:hidden focus:outline-none" onClick={() => setIsOpen(!isOpen)}>
-        <Menu/>
-      </button>
-      {isOpen && (
-        <div className="absolute top-16 left-0 w-full bg-transparent p-4 flex flex-col items-center space-y-4 md:hidden">
-          <a  onClick={()=>{setIsOpen(false); navigate('/contact-us')}} href="#" className="hover:text-gray-400 transition text-black">Contact us</a>
-          <a onClick={()=>{setIsOpen(false); navigate('/login')}} className="hover:text-gray-400 transition text-black">Login</a>
-          <button  onClick={()=>{setIsOpen(false); navigate('/signup')}} className="bg-blue-500 px-4 py-2 rounded-full hover:bg-blue-600 transition">
-            Sign Up
-          </button>
-        </div>
-      )}
-    </nav>
+    <Navbar isBordered isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
+      <NavbarContent className="sm:hidden" justify="start">
+        <NavbarMenuToggle aria-label={isMenuOpen ? "Close menu" : "Open menu"} />
+      </NavbarContent>
+
+      <NavbarContent className="sm:hidden pr-3" justify="center">
+        <NavbarBrand>
+          <img src={logo} alt="Travela Logo" className="h-4 w-4 mr-2" />
+          <p className="font-bold text-inherit">TRAVELA</p>
+        </NavbarBrand>
+      </NavbarContent>
+
+      <NavbarContent className="hidden sm:flex" justify="start">
+        <NavbarBrand>
+          <img src={logo} alt="Travela Logo" className="h-4 w-4 mr-2" />
+          <p className="font-bold text-inherit">TRAVELA</p>
+        </NavbarBrand>
+      </NavbarContent>
+
+      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+        {navItems.map((item) => (
+          <NavbarItem key={item.id}>
+            <Link color="foreground" href="#" onClick={() => navigate(item.id)}>
+              {item.label}
+            </Link>
+          </NavbarItem>
+        ))}
+      </NavbarContent>
+
+      <NavbarContent justify="end" className="flex items-center gap-4">
+        {userinfo ? (
+          <>
+            <Link href="/post">
+              <SquarePen className="w-6 h-6 text-gray-600" />
+            </Link>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Avatar className="cursor-pointer w-8 h-8">
+                  <AvatarImage src={userinfo?.image} alt={userinfo?.username} />
+                  <AvatarFallback>{userinfo?.firstName?.charAt(0)}</AvatarFallback>
+                </Avatar>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-48">
+                <DropdownMenuLabel>Menu</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate("/booking")}>Booking</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/messages")}>Messages</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/saved")}>Saved</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                {/* Profile Dialog Trigger */}
+                <ProfileDialog />
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red-600" onClick={logOut}>
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        ) : (
+          <>
+            <NavbarItem className="hidden lg:flex">
+              <Link onClick={() => navigate("/login")}>Login</Link>
+            </NavbarItem>
+            <NavbarItem>
+              <Button variant="flat" className="bg-slate-200 text-black" onClick={() => navigate("/signup")}>
+                Sign Up
+              </Button>
+            </NavbarItem>
+          </>
+        )}
+      </NavbarContent>
+
+      <NavbarMenu>
+        {navItems.map((item) => (
+          <NavbarMenuItem key={item.id}>
+            <Link className="w-full" color="foreground" href="#" onClick={() => navigate(item.id)}>
+              {item.label}
+            </Link>
+          </NavbarMenuItem>
+        ))}
+      </NavbarMenu>
+    </Navbar>
   );
 }

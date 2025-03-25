@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import axios from "axios";
+import axiosInstance from "../utils/axios-instance";
 import { setUserInfo } from "../redux/slice/auth";
 import { toast } from "react-toastify";
 
@@ -14,7 +14,7 @@ export const useFetchUser = () => {
       const fetchUser = async () => {
         setLoading(true);
         try {
-          const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/auth/profile`, { withCredentials: true });
+          const response = await axiosInstance.get(`/auth/profile`, { withCredentials: true });
           if (response.status === 200 && response.data.id) {
             dispatch(setUserInfo(response.data));
           } else {

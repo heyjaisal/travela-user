@@ -63,6 +63,7 @@ const eventSchema = new mongoose.Schema({
   images: [{
     type: String,
   }],
+      saves: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
   host: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Host',

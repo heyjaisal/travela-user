@@ -64,7 +64,7 @@ exports.verifyOtp = async (req, res) => {
     res.status(201).json({ message: "Signup Successful" });
   } catch (error) {
     console.error("Error verifying OTP:", error);
-    res.status(500).json({ error: "Error verifying OTP" });
+    res.status(500).json({ error: "Error verifying OTP" ,error});
   }
 };
 exports.userlogin = async (req, res) => {
@@ -120,9 +120,9 @@ exports.userlogin = async (req, res) => {
 
 
 exports.updateprofile = async (req, res) => {
-  const { firstName, lastName, username, street, country, city, gender } = req.body;
+  const { firstName, lastName, username, country, city } = req.body;
 
-  if (!firstName || !country || !city || !gender) {
+  if (!firstName || !country || !city ) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
@@ -138,8 +138,8 @@ exports.updateprofile = async (req, res) => {
     user.username = username || user.username;
     user.country = country || user.country;
     user.city = city || user.city;
-    user.street = street || user.street;
-    user.gender = gender || user.gender;
+
+
     
     user.profileSetup = true;
 
@@ -161,15 +161,12 @@ exports.getUser = async (req, res) => {
     return res.status(200).json({
       id: user._id,
       email: user.email,
-      profileSetup: user.profileSetup,
       firstName: user.firstName,
       lastName: user.lastName,
       image: user.image,
       username: user.username,
       country: user.country,
-      street: user.street,
       city: user.city,
-      gender: user.gender,
     });
   } catch (error) {
     console.log(error);
