@@ -23,6 +23,7 @@ module.exports = {
   		},
   		colors: {
   			lightBg: '#F4F7FE',
+			button:'#dc0e63',
 			  blue: {
 				'200': '#5954E4',
 				'600': '#7B76F1'

@@ -31,7 +31,7 @@ const navItems = [
   { label: "Features", id: "/" },
   { label: "Listing", id: "/booking" },
   { label: "Blogs", id: "/blogs" },
-  { label: "About us", id: "/aboutus" },
+  { label: "About us", id: "/about-us" },
 ];
 
 export default function NavbarComponent() {
@@ -46,7 +46,7 @@ export default function NavbarComponent() {
     });
     if (response.status === 200) {
       dispatch(setUserInfo(undefined));
-      navigate("/login");
+      navigate("/");
     }
   };
 
@@ -70,10 +70,10 @@ export default function NavbarComponent() {
         </NavbarBrand>
       </NavbarContent>
 
-      <NavbarContent className="hidden sm:flex gap-4" justify="center">
+      <NavbarContent className="hidden sm:flex cursor-pointer gap-4" justify="center">
         {navItems.map((item) => (
           <NavbarItem key={item.id}>
-            <Link color="foreground" href="#" onClick={() => navigate(item.id)}>
+            <Link color="foreground" onClick={() => navigate(item.id)}>
               {item.label}
             </Link>
           </NavbarItem>
@@ -97,6 +97,7 @@ export default function NavbarComponent() {
                 <DropdownMenuLabel>Menu</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate("/booking")}>Booking</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/notification")}>Notification</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/messages")}>Messages</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/saved")}>Saved</DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -126,7 +127,7 @@ export default function NavbarComponent() {
       <NavbarMenu>
         {navItems.map((item) => (
           <NavbarMenuItem key={item.id}>
-            <Link className="w-full" color="foreground" href="#" onClick={() => navigate(item.id)}>
+            <Link className="w-full cursor-pointer" color="foreground" onClick={() => navigate(item.id)}>
               {item.label}
             </Link>
           </NavbarMenuItem>

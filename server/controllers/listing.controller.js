@@ -118,3 +118,62 @@ exports.getListings = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+exports.listing = async (req, res) => {
+  const { type, limit } = req.query;
+  const maxLimit = Number(limit) || 10;
+
+  try {
+    if (!type) {
+      return res.status(400).json({ message: "Listing type is required" });
+    }
+
+    let listing = [];
+
+    if (type === "event") {
+      listing = await Events.find()
+        .sort({ createdAt: -1 })
+        .select("eventType title ticketPrice country city images")
+        .limit(maxLimit)
+        .lean();
+    } else if (type === "property") {
+      listing = await Property.find()
+        .sort({ createdAt: -1 })
+        .select("propertyType images price country city")
+        .limit(maxLimit)
+        .lean();
+    } else {
+      return res.status(400).json({ message: "Invalid listing type" });
+    }
+
+    res.json({ listing });
+  } catch (error) {
+    console.error("Error fetching listings:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.detailList = async (req, res) => {
+  const { id } = req.params;
+  const { type } = req.query;
+
+  let item;
+  try {
+    if (type === "event") {
+      item = await Events.findById(id)
+        .populate("host", "username image email")
+        .lean();
+    } else if (type === "property") {
+      item = await Property.findById(id)
+        .populate("host", "username image email")
+        .lean();
+    }
+
+    res.json({ item });
+  
+    
+  } catch (error) {
+    console.error(`Error fetching ${type}:`, error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

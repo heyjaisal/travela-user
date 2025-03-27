@@ -50,7 +50,7 @@ router.get('/auth/google/callback', passport.authenticate('google', { failureRed
       path: '/',
     });
 
-    res.redirect(`${process.env.CLIENT_URL}/home`);
+    res.redirect(`${process.env.CLIENT_URL}/`);
     
   } catch (error) {
     console.error('Error during Google OAuth callback:', error);

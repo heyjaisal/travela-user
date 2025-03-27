@@ -82,7 +82,7 @@ const ProfileDialog = () => {
     });
     if (response.status === 200) {
       dispatch(setUserInfo(undefined));
-      navigate("/login");
+      navigate("/");
     }
   };
 
@@ -211,7 +211,7 @@ const ProfileDialog = () => {
           </div>
         </div>
 
-<div className="flex justify-end space-x-2 mt-6">
+<div className="flex justify-end space-x-2 mt-3">
   <Button className="bg-blue-500 text-white px-3 py-1 text-sm">Save</Button>
   <Button className="bg-red-500 text-white px-3 py-1 text-sm" variant="destructive">Logout</Button>
 </div>

@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 
 const AuthRoute = ({ children }) => {
   const userInfo = useSelector((state) => state.auth.userInfo);
-  return userInfo ? <Navigate to="/home" /> : children;
+  return userInfo ? <Navigate to="/" /> : children;
 };
 
 export default AuthRoute;

@@ -5,12 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Heart } from "lucide-react";
 import axiosInstance from "../utils/axios-instance";
+import { useSelector } from "react-redux";
 
 const BlogCard = ({ blog }) => {
   const navigate = useNavigate();
   const [isLiked, setIsLiked] = useState(blog.isLiked);
   const [likeCount, setLikeCount] = useState(blog.likeCount);
   const [isSaved, setIsSaved] = useState(blog.isSaved);
+  const userInfo = useSelector((state) => state.auth.userInfo);
 
   const handleLike = async (e) => {
     e.stopPropagation();
@@ -57,9 +59,7 @@ const BlogCard = ({ blog }) => {
             loading="lazy"
           />
         )}
-
-        {/* Save Button at Top Right */}
-        <button
+{userInfo && <button
           onClick={handleSave}
           className="absolute top-2 right-2 p-2 z-10 rounded-full"
         >
@@ -80,7 +80,8 @@ const BlogCard = ({ blog }) => {
               d="M6 2v20l6-4 6 4V2z"
             />
           </motion.svg>
-        </button>
+        </button>}
+        
 
         <div className="flex items-center justify-between px-4 pt-4 pb-3">
           <div className="flex items-center gap-2">
@@ -97,16 +98,15 @@ const BlogCard = ({ blog }) => {
               {blog.author?.username || "Unknown Author"}
             </p>
           </div>
-
-          {/* Like Button */}
-          <button onClick={handleLike} className="focus:outline-none">
+{userInfo && <button onClick={handleLike} className="focus:outline-none">
             <motion.div
               animate={{ scale: isLiked ? [1, 1.3, 1] : 1 }}
               transition={{ duration: 0.3 }}
             >
               <Heart className={`w-6 h-6 ${isLiked ? "text-red-500 fill-red-500" : "text-gray-400"}`} />
             </motion.div>
-          </button>
+          </button>}
+          
         </div>
 
         <CardContent className="px-4 flex flex-col">

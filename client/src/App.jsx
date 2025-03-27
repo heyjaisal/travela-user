@@ -23,6 +23,7 @@ const Account = lazy(() => import("./pages/Account"));
 const UserProfile = lazy(() => import("./users/user-profile"));
 const EventPage = lazy(() => import("./event/event-page"));
 const PropertyPage = lazy(() => import("./property/property-page"));
+const AboutUs = lazy(() => import("./landing/about-us"));
 const Fallback = lazy(() => import("./components/fallback"));
 
 const App = () => {
@@ -81,6 +82,7 @@ const App = () => {
                 <Route path="/booked" element={<Booked />} />
                 <Route path="/profile" element={<Profile />} />
                 <Route path="/account" element={<Account />} />
+                <Route path="/about-us" element={<AboutUs />} />
                 <Route path="/user/:id" element={<UserProfile />} />
                 <Route path="/event/:id" element={<EventPage />} />
                 <Route path="/property/:id" element={<PropertyPage />} />

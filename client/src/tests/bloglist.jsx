@@ -1,349 +1,184 @@
+import React, { useState, useEffect } from "react";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { Calendar } from "@/components/ui/calendar";
+import "tailwindcss/tailwind.css";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
+const images = [
+  "https://a0.muscache.com/im/pictures/hosting/Hosting-1346147961467201760/original/2cf80dff-90c7-46d2-b5b6-5613189ebdd5.jpeg?im_w=960",
+  "https://a0.muscache.com/im/pictures/hosting/Hosting-1346147961467201760/original/1720e6f6-3b97-4e60-960f-c3684f1bdb7f.jpeg?im_w=960",
+  "https://a0.muscache.com/im/pictures/hosting/Hosting-1346147961467201760/original/2cf80dff-90c7-46d2-b5b6-5613189ebdd5.jpeg?im_w=960",
+  "https://a0.muscache.com/im/pictures/hosting/Hosting-1346147961467201760/original/1720e6f6-3b97-4e60-960f-c3684f1bdb7f.jpeg?im_w=960",
+];
 
-import React, { useState, useEffect, useRef } from "react";
-import axiosInstance from "../utils/axios-instance";
-import { ToastContainer, toast } from "react-toastify";
-import { useSelector, useDispatch } from "react-redux";
-import { setUserInfo } from "@/redux/slice/auth";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
-import { FaPlus, FaTrash } from "react-icons/fa";
-import { API_BASE_URL } from "@/utils/constants";
-import { ScaleLoader } from "react-spinners";
-import { useNavigate } from "react-router-dom";
-
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from "@/components/ui/card";
-
-const Profile = () => {
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const userinfo = useSelector((state) => state.auth.userInfo);
-  const [image, setImage] = useState(userinfo?.image || null);
-  const fileInputRef = useRef(null);
-  const [loading, setLoading] = useState(false);
-  const [hovered, setHovered] = useState(false);
-  const [errors, setErrors] = useState({});
-
-  const [profileData, setProfileData] = useState({
-    firstName: "",
-    lastName: "",
-    username: "",
-    country: "",
-    email: "",
-    phone: "",
-    street: "",
-    city: "",
-    gender: "",
-  });
+const PropertyGallery = () => {
+  const [hoveredIndex, setHoveredIndex] = useState(null);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
+  const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await axiosInstance.get(`/auth/profile`, {
-          withCredentials: true,
-        });
-        setProfileData(response.data);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        toast.error("Failed to fetch user data");
-      }
-    };
-
-    fetchData();
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  const handleFieldChange = (e) => {
-    const { name, value } = e.target;
-    setProfileData((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const validateFields = () => {
-    let tempErrors = {};
-
-    if (!profileData.firstName) tempErrors.firstName = "First name is required";
-    if (!profileData.lastName) tempErrors.lastName = "Last name is required";
-    if (!profileData.username) tempErrors.username = "Username is required";
-    if (!profileData.street) tempErrors.street = "Street is required";
-    if (!profileData.country) tempErrors.country = "Country is required";
-    if (!profileData.city) tempErrors.city = "City is required";
-    if (!profileData.gender) tempErrors.gender = "Gender is required";
-
-    setErrors(tempErrors);
-    return Object.keys(tempErrors).length === 0;
-  };
-
-  const handleSave = async () => {
-    if (validateFields()) {
-      try {
-        const { data } = await axiosInstance.put(
-          `/auth/profile`,
-          profileData,
-          { withCredentials: true }
-        );
-        dispatch(setUserInfo(data.user));
-        toast.success("Profile details submitted successfully!");
-      } catch (error) {
-        if (error.response?.data?.message === "Phone number already exists") {
-          setErrors((prev) => ({
-            ...prev,
-            phone: error.response.data.message,
-          }));
-        } else {
-          toast.error("Failed to update profile");
-        }
-      }
-    }
-  };
-
-  const logOut = async () => {
-    const response = await axiosInstance.get(`/auth/logout`, {
-      withCredentials: true,
-    });
-    if (response.status === 200) {
-      dispatch(setUserInfo(undefined));
-      navigate("/login");
-    }
-  };
-
-  const handleImage = async (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("type", "profile");
-
-    setLoading(true);
-    try {
-      const response = await axiosInstance.post(`/upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-        withCredentials: true,
-      });
-
-      if (response.status === 200) {
-        const imageUrl = response.data.imageUrl;
-        dispatch(setUserInfo({ ...userinfo, image: imageUrl }));
-        setImage(imageUrl);
-        toast.success("Image uploaded successfully!");
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      toast.error("Failed to upload image");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const deleteImage = async () => {
-    setLoading(true);
-    try {
-      const response = await axiosInstance.delete(`/delete`, {
-        withCredentials: true,
-        data: {
-          image: image,
-          type: "profile",
-        },
-      });
-
-      if (response.status === 200) {
-        dispatch(setUserInfo({ ...userinfo, image: null }));
-        setImage(null);
-        toast.success("Image deleted successfully!");
-      }
-    } catch (error) {
-      console.error("Error deleting image:", error);
-      toast.error("Failed to delete image");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <ScaleLoader color="#4fa94d" aria-label="loading" style={{ display: "block" }} />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen">
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-xl font-bold text-gray-700">
-            Welcome, {profileData.firstName} {profileData.lastName}
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col md:flex-row gap-6">
-            {/* Avatar Section */}
-            <div className="flex flex-col items-center md:w-1/3">
-              <div
-                className="relative w-24 h-24 md:w-32 md:h-32 flex items-center justify-center"
-                onMouseEnter={() => setHovered(true)}
-                onMouseLeave={() => setHovered(false)}
-              >
-                <Avatar className="w-24 h-24 md:w-32 md:h-32 rounded-full overflow-hidden">
-                  {image ? (
-                    <AvatarImage src={image} alt="profile" className="object-cover w-full h-full" />
-                  ) : (
-                    <div className="flex items-center justify-center w-full h-full text-5xl border rounded-full">
-                      {profileData.firstName
-                        ? profileData.firstName.charAt(0)
-                        : profileData.email.charAt(0)}
-                    </div>
-                  )}
-                </Avatar>
-                {hovered && (
-                  <div
-                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer"
-                    onClick={image ? deleteImage : () => fileInputRef.current.click()}
-                  >
-                    {image ? (
-                      <FaTrash className="text-white text-3xl" />
-                    ) : (
-                      <FaPlus className="text-white text-3xl" />
-                    )}
-                  </div>
-                )}
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleImage}
-                  name="profile-image"
-                  accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
-                />
-              </div>
-              <h3 className="mt-4 text-lg font-semibold">
-                {profileData.firstName} {profileData.lastName}
-              </h3>
-              <div className="mt-2 w-full">
-                <Label htmlFor="email" className="text-sm font-semibold text-gray-700">
-                  Email:
-                </Label>
-                <Input id="email" name="email" value={profileData.email} disabled className="mt-1" />
-              </div>
+    <div className="max-w-6xl mx-auto p-4">
+      <h2 className="text-xl font-semibold mb-4">Rawstone Luxury 2BR Villa</h2>
+      {isMobile ? (
+        <Slider
+          dots
+          infinite
+          speed={500}
+          slidesToShow={1}
+          slidesToScroll={1}
+          adaptiveHeight
+        >
+          {images.map((img, idx) => (
+            <div key={idx}>
+              <img
+                src={img}
+                alt={`Slide ${idx + 1}`}
+                className="w-full h-64 object-cover rounded-xl"
+              />
             </div>
-
-            {/* Profile Details Section */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <Label htmlFor="firstName" className="text-sm font-semibold text-gray-700">
-                  First Name:
-                </Label>
-                <Input
-                  id="firstName"
-                  name="firstName"
-                  value={profileData.firstName}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.firstName && <p className="text-red-500 text-sm mt-1">{errors.firstName}</p>}
-              </div>
-              <div>
-                <Label htmlFor="lastName" className="text-sm font-semibold text-gray-700">
-                  Last Name:
-                </Label>
-                <Input
-                  id="lastName"
-                  name="lastName"
-                  value={profileData.lastName}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.lastName && <p className="text-red-500 text-sm mt-1">{errors.lastName}</p>}
-              </div>
-              <div>
-                <Label htmlFor="country" className="text-sm font-semibold text-gray-700">
-                  Country:
-                </Label>
-                <Input
-                  id="country"
-                  name="country"
-                  value={profileData.country}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.country && <p className="text-red-500 text-sm mt-1">{errors.country}</p>}
-              </div>
-              <div>
-                <Label htmlFor="city" className="text-sm font-semibold text-gray-700">
-                  City:
-                </Label>
-                <Input
-                  id="city"
-                  name="city"
-                  value={profileData.city}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.city && <p className="text-red-500 text-sm mt-1">{errors.city}</p>}
-              </div>
+          ))}
+        </Slider>
+      ) : (
+        <div className="flex gap-4">
+          {images.map((img, idx) => (
+            <div
+              key={idx}
+              onMouseEnter={() => setHoveredIndex(idx)}
+              onMouseLeave={() => setHoveredIndex(null)}
+              onClick={() => setSelectedImage(img)}
+              className={`h-64 transition-all duration-300 ease-in-out flex-1 cursor-pointer ${
+                hoveredIndex === idx ? "flex-[4]" : ""
+              }`}
+            >
+              <img
+                src={img}
+                alt={`Image ${idx + 1}`}
+                className="w-full h-full object-cover rounded-xl"
+              />
             </div>
-
-            {/* Account Details Section */}
-            <div className="flex-1 space-y-4">
-              <div>
-                <Label htmlFor="username" className="text-sm font-semibold text-gray-700">
-                  Username:
-                </Label>
-                <Input
-                  id="username"
-                  name="username"
-                  value={profileData.username}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.username && <p className="text-red-500 text-sm mt-1">{errors.username}</p>}
-              </div>
-              <div>
-                <Label htmlFor="street" className="text-sm font-semibold text-gray-700">
-                  Street:
-                </Label>
-                <Input
-                  id="street"
-                  name="street"
-                  value={profileData.street}
-                  onChange={handleFieldChange}
-                  className="mt-1"
-                />
-                {errors.street && <p className="text-red-500 text-sm mt-1">{errors.street}</p>}
-              </div>
-              <div>
-                <Label htmlFor="gender" className="text-sm font-semibold text-gray-700">
-                  Gender:
-                </Label>
-                <select
-                  id="gender"
-                  name="gender"
-                  value={profileData.gender}
-                  onChange={handleFieldChange}
-                  className="mt-1 block w-full p-2 border border-gray-300 rounded-md"
-                >
-                  <option value="">Select Gender</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-                {errors.gender && <p className="text-red-500 text-sm mt-1">{errors.gender}</p>}
-              </div>
-            </div>
-          </div>
-        </CardContent>
-        <CardFooter className="flex justify-end space-x-4">
-          <Button onClick={handleSave} className="bg-blue-500 text-white">
-            Save
-          </Button>
-          <Button onClick={logOut} variant="destructive">
-            Logout
-          </Button>
-        </CardFooter>
-      </Card>
-      <ToastContainer />
+          ))}
+        </div>
+      )}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50"
+          onClick={() => setSelectedImage(null)}
+        >
+          <button
+            className="absolute top-5 right-5 text-white text-3xl"
+            onClick={(e) => {
+              e.stopPropagation();
+              setSelectedImage(null);
+            }}
+          >
+            &times;
+          </button>
+          <img
+            src={selectedImage}
+            alt="Selected"
+            className="max-w-3xl max-h-[80vh] rounded-xl"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
     </div>
   );
 };
 
-export default Profile;
+const PropertyDetails = () => {
+
+   const [checkIn, setCheckIn] = React.useState(null);
+    const [checkOut, setCheckOut] = React.useState(null);
+    const [showCalendar, setShowCalendar] = React.useState(null);
+
+  return (
+    <div className="max-w-6xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="bg-white shadow-lg p-6 rounded-lg border order-1 md:order-2 md:sticky md:top-20 self-start">
+        <h2 className="text-xl font-bold">
+          ₹25,000 <span className="text-sm font-normal">/night</span>
+        </h2>
+        <div className="border p-3 rounded-lg my-4">
+          <div className="flex justify-between">
+          <div onClick={() => setShowCalendar('checkin')} className="cursor-pointer">
+              <p className="text-sm text-gray-600">CHECK-IN</p>
+              <p className="font-normal">{checkIn ? checkIn.toDateString() : "Select Date"}</p>
+            </div>
+            <div onClick={() => setShowCalendar('checkout')} className="cursor-pointer">
+              <p className="text-sm text-gray-600">CHECKOUT</p>
+              <p className="font-normal">{checkOut ? checkOut.toDateString() : "Select Date"}</p>
+            </div>
+          </div>
+          {showCalendar && (
+                      <div className="absolute top-full left-0 bg-white shadow-md p-3 rounded-md z-10">
+                        <Calendar
+                          mode="single"
+                          selected={showCalendar === 'checkin' ? checkIn : checkOut}
+                          onSelect={(date) => {
+                            showCalendar === 'checkin' ? setCheckIn(date) : setCheckOut(date);
+                            setShowCalendar(null);
+                          }}
+                          className="rounded-md border shadow"
+                        />
+                      </div>
+                    )}
+          <div className="mt-3">
+            <p className="text-sm text-gray-600">GUESTS</p>
+            <select className="w-full p-2 border rounded">
+              <option>1 guest</option>
+              <option>2 guests</option>
+              <option>3 guests</option>
+            </select>
+          </div>
+        </div>
+        <button className="w-full bg-red-500 text-white py-2 rounded-lg font-semibold">
+          Reserve
+        </button>
+        <p className="text-center text-sm text-gray-500 mt-2">
+          You won't be charged yet
+        </p>
+      </div>
+      <div className="md:col-span-2 space-y-4 order-2 md:order-1">
+        <h1 className="text-2xl font-bold">Barn in Jaipur, India</h1>
+        <p className="text-gray-600">
+          6 guests · 2 bedrooms · 2 beds · 2 bathrooms
+        </p>
+        <div className="border-t pt-4 flex items-center gap-3">
+          <Avatar>
+            <AvatarImage
+              src="https://via.placeholder.com/50"
+              alt="Host Avatar"
+            />
+            <AvatarFallback>S</AvatarFallback>
+          </Avatar>
+          <div>
+            <h3 className="font-semibold">Hosted by Sangeeta</h3>
+            <p className="text-sm text-gray-500">3 years hosting</p>
+          </div>
+        </div>
+        <p className="text-gray-700">
+          Our Two-Bedroom Villa offers modern elegance and comfort in the serene
+          surroundings of Kukas, Jaipur...
+        </p>
+      </div>
+    </div>
+  );
+};
+
+const PropertyPage = () => {
+  return (
+    <div>
+      <PropertyGallery />
+      <PropertyDetails />
+    </div>
+  );
+};
+
+export default PropertyPage;

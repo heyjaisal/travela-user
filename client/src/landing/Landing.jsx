@@ -3,9 +3,11 @@ import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { Button } from "@/components/ui/button";
 import HeroSection from "./HeroSection";
-import PropertyList from "./Pricing";
+import PropertyList from "./listing";
 import Workflow from "./Workflow";
-import FeatureSection from "./FeatureSection";
+import Faqs from "./Faqs";
+import Testimonials from "./testimonials";
+import Footer from "./Footer";
 
 export default function App() {
 
@@ -18,14 +20,15 @@ export default function App() {
         <section id="listing">
           <PropertyList />
         </section>
+        <Faqs/>
         <section id="blogs">
           <Workflow />
         </section>
-        <section id="features">
-          <FeatureSection />
+        <section id="features">          
+          <Testimonials/>
         </section>
-        <section id="aboutus"></section>
       </div>
+      <Footer/>
     </>
   );
 }
