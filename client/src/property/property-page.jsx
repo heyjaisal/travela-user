@@ -1,49 +1,64 @@
 import ImageGallery from "@/components/image";
 import MapWithDirectionButton from "@/components/map";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Calendar } from "@/components/ui/calendar";
 import { Input } from "@/components/ui/input";
 import axiosInstance from "@/utils/axios-instance";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
-const features = [
-  "Entire villa",
-  "2 bedrooms, 2 beds",
-  "2 bathrooms",
-  "Self check-in",
-  "Great location",
-  "Fast WiFi",
-];
-
-function propertypage() {
+function PropertyPage() {
   const { id } = useParams();
-  const [property, Setproperty] = useState([]);
+  const navigate = useNavigate();
+  const [property, setProperty] = useState(null);
   const [checkIn, setCheckIn] = useState(null);
   const [checkOut, setCheckOut] = useState(null);
   const [showCalendar, setShowCalendar] = useState(null);
+  const [bookedDates, setBookedDates] = useState([]);
 
   useEffect(() => {
-    const fetchproperty = async () => {
-      const { data } = await axiosInstance.get(`/listing/details/${id}`, {
-        params: { type: "property" },
-        withCredentials: true,
-      });
-      Setproperty(data.item);
-      console.log(data);
+    const fetchProperty = async () => {
+      try {
+        const { data } = await axiosInstance.get(`/listing/details/${id}`, {
+          params: { type: "property" },
+          withCredentials: true,
+        });
+        setProperty(data.item);
+
+        // Fetch booked dates
+        if (data.item.bookings) {
+          const bookedRanges = data.item.bookings.map((booking) => {
+            const start = new Date(booking.checkIn);
+            const end = new Date(booking.checkOut);
+            const dates = [];
+            while (start <= end) {
+              dates.push(new Date(start));
+              start.setDate(start.getDate() + 1);
+            }
+            return dates;
+          });
+          setBookedDates(bookedRanges.flat());
+        }
+      } catch (error) {
+        console.error("Error fetching property details:", error);
+      }
     };
 
-    if (id) {
-      fetchproperty();
-    }
+    if (id) fetchProperty();
   }, [id]);
-  console.log(property);
 
-  console.log(property.host?.username);
+  if (!property) return <p className="text-center mt-10">Loading...</p>;
 
   const fullName =
     property.host?.firstName && property.host?.lastName
       ? `${property.host.firstName} ${property.host.lastName}`
       : property.host?.username;
+
+  const getNumberOfNights = () => {
+    if (!checkIn || !checkOut) return 0;
+    const diffTime = Math.abs(checkOut - checkIn);
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  };
 
   return (
     <>
@@ -82,17 +97,69 @@ function propertypage() {
               </div>
             </div>
           </div>
+          {showCalendar && (
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+              onClick={() => setShowCalendar(null)}
+            >
+              <div className="bg-white p-4 rounded-lg shadow-lg relative">
+                <Calendar
+                  mode="single"
+                  selected={showCalendar === "checkin" ? checkIn : checkOut}
+                  onSelect={(date) => {
+                    if (showCalendar === "checkin") setCheckIn(date);
+                    else setCheckOut(date);
+                    setShowCalendar(null);
+                  }}
+                  disabled={(date) =>
+                    bookedDates.some(
+                      (d) => d.toDateString() === date.toDateString()
+                    )
+                  }
+                  className="rounded-md border shadow"
+                />
+              </div>
+            </div>
+          )}
+
+          {checkIn && checkOut && (
+            <div className="my-4">
+              <h3 className="text-xl font-semibold">
+                Total Price: ₹{property.price * getNumberOfNights()}
+              </h3>
+              <p className="text-sm text-gray-600">
+                Total: ₹{property.price * getNumberOfNights()} for{" "}
+                {getNumberOfNights()} night{getNumberOfNights() > 1 ? "s" : ""}
+              </p>
+            </div>
+          )}
+
           <div className="mb-3">
-            <h1>Max Gust : {property.maxStay}</h1>
-            <Input placeholder="Add Gust" />
+            <h1>Max Guests: {property.maxStay}</h1>
+            <Input placeholder="Add Guests" />
           </div>
-          <button className="w-full bg-button text-white py-2 rounded-lg font-semibold">
-            Reserve
-          </button>
+          <button
+  onClick={() =>
+    navigate("/checkout", {
+      state: {
+        property,
+        checkIn,
+        checkOut,
+        totalNights: getNumberOfNights(),
+        totalPrice: property.price * getNumberOfNights(),
+      },
+    })
+  }
+  className="w-full bg-button text-white py-2 rounded-lg font-semibold"
+>
+  Reserve
+</button>
+
           <p className="text-center text-sm text-gray-500 mt-2">
             You won't be charged yet
           </p>
         </div>
+
         <div className="md:col-span-2 space-y-4 order-2 md:order-1">
           <h1 className="text-2xl font-bold">
             Barn in {property.state}, {property.country}
@@ -113,7 +180,6 @@ function propertypage() {
                   : "?"}
               </AvatarFallback>
             </Avatar>
-
             <div>
               <h3 className="font-semibold">
                 Hosted by {fullName || "unknown host"}
@@ -123,23 +189,30 @@ function propertypage() {
               </p>
             </div>
           </div>
-          <p className="py-5">
-            {property.description}
-          </p>
+          <p className="py-5">{property.description}</p>
           <h3 className="text-lg font-semibold mb-2">About this place</h3>
           <ul className="space-y-1 text-gray-700 text-sm">
-            {features.map((feature, index) => (
-              <li key={index}>{feature}</li>
-            ))}
+            {property.features && property.features.length > 0 ? (
+              property.features.map((feature) => (
+                <li key={feature._id}>{feature.text}</li>
+              ))
+            ) : (
+              <li>No features listed</li>
+            )}
           </ul>
           <h3 className="text-xl font-bold">Where you’ll be</h3>
-          <p>Street, City , State, country</p>
-
-          <MapWithDirectionButton lat={27.1751} lng={78.0421} />
+          <p>
+            {property.street}, {property.city}, {property.state},{" "}
+            {property.country}
+          </p>
+          <MapWithDirectionButton
+            lat={property.location?.lat}
+            lng={property.location?.lng}
+          />
         </div>
       </div>
     </>
   );
 }
 
-export default propertypage;
+export default PropertyPage;

@@ -12,8 +12,8 @@ module.exports = {
   theme: {
   	extend: {
 		screens: {
-			"3xl": "1920px", // Custom breakpoint for 5 columns at 1920px+
-			"4xl": "2560px", // Custom breakpoint for 6 columns at 2560px+
+			"3xl": "1920px",
+			"4xl": "2560px",
 		  },
   		fontFamily: {
   			title: [

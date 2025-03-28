@@ -2,6 +2,7 @@ const Events = require("../models/Event");
 const User = require("../models/User");
 const Blog = require("../models/Blog");
 const Property = require("../models/Property");
+const Booking = require("../models/Booking");
 
 exports.getListings = async (req, res) => {
   try {
@@ -167,11 +168,25 @@ exports.detailList = async (req, res) => {
       item = await Property.findById(id)
         .populate("host", "username image email")
         .lean();
+
+      const bookings = await Booking.find({
+        property: id,
+        status: "confirmed",
+      }).select("checkIn checkOut");
+
+      const bookedDates = [];
+      bookings.forEach(({ checkIn, checkOut }) => {
+        let date = new Date(checkIn);
+        while (date <= checkOut) {
+          bookedDates.push(new Date(date));
+          date.setDate(date.getDate() + 1);
+        }
+      });
+
+      item.bookedDates = bookedDates; 
     }
 
     res.json({ item });
-  
-    
   } catch (error) {
     console.error(`Error fetching ${type}:`, error);
     res.status(500).json({ error: "Internal server error" });

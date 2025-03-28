@@ -15,6 +15,7 @@ const userRoutes = require('./routes/user.routes')
 const app = express();
 require('dotenv').config();
 
+const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const mongoURL = process.env.MONGO_URI;
 const Port = process.env.PORT || 5000;
 

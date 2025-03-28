@@ -25,6 +25,7 @@ const EventPage = lazy(() => import("./event/event-page"));
 const PropertyPage = lazy(() => import("./property/property-page"));
 const AboutUs = lazy(() => import("./landing/about-us"));
 const Fallback = lazy(() => import("./components/fallback"));
+const Checkout = lazy(() => import("./property/checkout"));
 
 const App = () => {
   const [loading, setLoading] = useState(false);
@@ -86,6 +87,7 @@ const App = () => {
                 <Route path="/user/:id" element={<UserProfile />} />
                 <Route path="/event/:id" element={<EventPage />} />
                 <Route path="/property/:id" element={<PropertyPage />} />
+                <Route path="/checkout" element={<Checkout/>} />
                 <Route path="*" element={<Fallback />} />
               </Routes>
             </>
