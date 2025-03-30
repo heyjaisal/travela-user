@@ -10,12 +10,12 @@ const authRoutes = require('./routes/auth.routes');
 const uploadRoute = require('./routes/upload.routes');
 const blogRoutes = require('./routes/blog.routes');
 const listingRoutes = require('./routes/listing.routes');
-const userRoutes = require('./routes/user.routes')
+const userRoutes = require('./routes/user.routes');
+const checkout = require("./routes/checkout.routes");
 
 const app = express();
 require('dotenv').config();
 
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const mongoURL = process.env.MONGO_URI;
 const Port = process.env.PORT || 5000;
 
@@ -27,7 +27,8 @@ app.use(session({
   cookie: { secure: process.env.NODE_ENV === 'production' },
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 require('./config/passport');
 
@@ -42,19 +43,21 @@ app.use(passport.session());
 app.use('/api/auth', authRoutes); 
 app.use('/api', uploadRoute);
 app.use("/api/blogs", blogRoutes);
-app.use("/api/user",userRoutes );
+app.use("/api/user", userRoutes);
 app.use("/api/listing", listingRoutes);
+app.use("/api/checkout", checkout);
 app.use(authRoute);
 
 async function startServer() {
-  
-  await mongoose.connect(mongoURL)
-    .then(() => console.log('Database connection done'))
-    .catch(err => console.log(err.message));
-
-  app.listen(Port, () => {
-    console.log(`Server running on port ${Port}`);
-  });
+  try {
+    await mongoose.connect(mongoURL);
+    console.log('Database connection done');
+    app.listen(Port, () => {
+      console.log(`Server running on port ${Port}`);
+    });
+  } catch (err) {
+    console.error('Database connection failed:', err.message);
+  }
 }
 
 startServer();

@@ -5,6 +5,8 @@ import { ScaleLoader } from "react-spinners";
 import { setUserInfo } from "./redux/slice/auth";
 import Navbar from "./landing/navbar";
 import axiosInstance from "./utils/axios-instance";
+import Bookingsucces from "./event/booking-succes";
+import Boookingfail from "./event/boooking-fail";
 
 const Landing = lazy(() => import("./landing/Landing"));
 const Signup = lazy(() => import("./auth/Signup"));
@@ -26,6 +28,7 @@ const PropertyPage = lazy(() => import("./property/property-page"));
 const AboutUs = lazy(() => import("./landing/about-us"));
 const Fallback = lazy(() => import("./components/fallback"));
 const Checkout = lazy(() => import("./property/checkout"));
+const ECheckout = lazy(() => import("./event/succes"));
 
 const App = () => {
   const [loading, setLoading] = useState(false);
@@ -37,7 +40,9 @@ const App = () => {
       const fetchUser = async () => {
         setLoading(true);
         try {
-          const response = await axiosInstance.get("/auth/profile", { withCredentials: true });
+          const response = await axiosInstance.get("/auth/profile", {
+            withCredentials: true,
+          });
           if (response.status === 200 && response.data.id) {
             dispatch(setUserInfo(response.data));
           } else {
@@ -63,35 +68,50 @@ const App = () => {
 
   return (
     <Router>
-      <Suspense fallback={<div className="flex justify-center items-center h-screen"><ScaleLoader color="#C0C2C9" aria-label="loading" /></div>}>
+      <Suspense
+        fallback={
+          <div className="flex justify-center items-center h-screen">
+            <ScaleLoader color="#C0C2C9" aria-label="loading" />
+          </div>
+        }
+      >
         <Routes>
           <Route path="/signup" element={<Signup />} />
           <Route path="/login" element={<Login />} />
-          <Route path="*" element={
-            <>
-              <Navbar />
-              <Routes>
-                <Route path="/" element={<Landing />} />
-                <Route path="/blogs" element={<Home />} />
-                <Route path="/messages" element={<Messages />} />
-                <Route path="/people" element={<People />} />
-                <Route path="/booking" element={<Booking />} />
-                <Route path="/post" element={<BlogPost />} />
-                <Route path="/blog/:id" element={<BlogDetail />} />
-                <Route path="/payment" element={<Payment />} />
-                <Route path="/notification" element={<Notification />} />
-                <Route path="/booked" element={<Booked />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/account" element={<Account />} />
-                <Route path="/about-us" element={<AboutUs />} />
-                <Route path="/user/:id" element={<UserProfile />} />
-                <Route path="/event/:id" element={<EventPage />} />
-                <Route path="/property/:id" element={<PropertyPage />} />
-                <Route path="/checkout" element={<Checkout/>} />
-                <Route path="*" element={<Fallback />} />
-              </Routes>
-            </>
-          } />
+          <Route
+            path="*"
+            element={
+              <>
+                <Navbar />
+                <Routes>
+                  <Route path="/" element={<Landing />} />
+                  <Route path="/blogs" element={<Home />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/people" element={<People />} />
+                  <Route path="/booking" element={<Booking />} />
+                  <Route path="/post" element={<BlogPost />} />
+                  <Route path="/blog/:id" element={<BlogDetail />} />
+                  <Route path="/payment" element={<Payment />} />
+                  <Route path="/notification" element={<Notification />} />
+                  <Route path="/booked" element={<Booked />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/account" element={<Account />} />
+                  <Route path="/success" element={<ECheckout />} />
+                  <Route
+                    path="/booking-confirmed"
+                    element={<Bookingsucces />}
+                  />
+                  <Route path="/booking-failed" element={<Boookingfail />} />
+                  <Route path="/about-us" element={<AboutUs />} />
+                  <Route path="/user/:id" element={<UserProfile />} />
+                  <Route path="/event/:id" element={<EventPage />} />
+                  <Route path="/property/:id" element={<PropertyPage />} />
+                  <Route path="/property/checkout" element={<Checkout />} />
+                  <Route path="*" element={<Fallback />} />
+                </Routes>
+              </>
+            }
+          />
         </Routes>
       </Suspense>
     </Router>

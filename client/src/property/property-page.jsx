@@ -140,7 +140,7 @@ function PropertyPage() {
           </div>
           <button
   onClick={() =>
-    navigate("/checkout", {
+    navigate("/property/checkout", {
       state: {
         property,
         checkIn,
@@ -216,3 +216,4 @@ function PropertyPage() {
 }
 
 export default PropertyPage;
+
