@@ -9,7 +9,6 @@ const Success = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const isProcessing = useRef(false);
-  const abortController = useRef(new AbortController());
 
   const sessionId = searchParams.get("session_id");
   const eventId = searchParams.get("event_id");
@@ -22,6 +21,8 @@ const Success = () => {
       if (isProcessing.current) return; // Prevent duplicate requests
       isProcessing.current = true;
 
+      console.log("Processing payment with:", { sessionId, eventId, ticketsBooked, totalAmount, userInfo });
+
       try {
         if (!sessionId || !eventId || !ticketsBooked || !totalAmount) {
           throw new Error("Missing required payment information");
@@ -31,17 +32,13 @@ const Success = () => {
           throw new Error("User authentication required");
         }
 
-        const response = await axiosInstance.post(
-          `/checkout/capture-payment`,
-          {
-            sessionId,
-            user: userInfo.id,
-            event: eventId,
-            ticketsBooked: parseInt(ticketsBooked, 10),
-            totalAmount: parseFloat(totalAmount),
-          },
-          { signal: abortController.current.signal }
-        );
+        const response = await axiosInstance.post("/checkout/capture-payment", {
+          sessionId,
+          user: userInfo.id,
+          event: eventId,
+          ticketsBooked: parseInt(ticketsBooked, 10),
+          totalAmount: parseFloat(totalAmount),
+        });
 
         if (response.data.success) {
           navigate("/booking-confirmed", { replace: true });
@@ -61,12 +58,6 @@ const Success = () => {
     };
 
     processPayment();
-
-    return () => {
-      isProcessing.current = false;
-      abortController.current.abort();
-      abortController.current = new AbortController();
-    };
   }, [sessionId, eventId, ticketsBooked, totalAmount, userInfo, navigate]);
 
   if (error) {

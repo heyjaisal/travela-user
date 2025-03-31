@@ -16,7 +16,7 @@ const hostSchema = new mongoose.Schema(
     city: { type: String },
     phone: { type: Number },
     gender: { type: String, enum: ["male", "female"] },
-    stripeAccountId: { type: String, required: true }, // Ensure Stripe account is linked for payouts
+    stripeAccountId: { type: String, required: true }, 
   },
   { timestamps: true }
 );

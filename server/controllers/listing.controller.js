@@ -162,11 +162,11 @@ exports.detailList = async (req, res) => {
   try {
     if (type === "event") {
       item = await Events.findById(id)
-        .populate("host", "username image email")
+        .populate("host", "username image email firstName lastName")
         .lean();
     } else if (type === "property") {
       item = await Property.findById(id)
-        .populate("host", "username image email")
+        .populate("host", "username image firstName lastName email")
         .lean();
 
       const bookings = await Booking.find({
