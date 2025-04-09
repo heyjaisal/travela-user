@@ -3,16 +3,23 @@ import MapWithDirectionButton from "@/components/map";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { NumberInput } from "@heroui/react";
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import axiosInstance from "@/utils/axios-instance";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { useSelector } from "react-redux";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function Eventpage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const [event, setEvent] = useState(null);
   const [ticketCount, setTicketCount] = useState(1);
   const [loading, setLoading] = useState(false);
   const [availableTickets, setAvailableTickets] = useState(0);
-  const [error, setError] = useState(null);
+  const userInfo = useSelector((state) => state.auth.userInfo);
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -25,7 +32,7 @@ function Eventpage() {
         setAvailableTickets(data.item?.maxGuests || 0);
       } catch (error) {
         console.error("Error fetching event:", error);
-        setError("Failed to load event details");
+        toast.error("Failed to load event details");
       }
     };
 
@@ -33,16 +40,19 @@ function Eventpage() {
   }, [id]);
 
   const handleReserve = async () => {
-    if (!event || ticketCount < 1 || ticketCount > availableTickets) return;
+    if (!userInfo) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (!event || ticketCount < 1 || ticketCount > availableTickets) {
+      toast.error("Invalid ticket count");
+      return;
+    }
+
     setLoading(true);
-    setError(null);
 
     try {
-      // Calculate fees with proper rounding to avoid floating point issues
-      const platformFee = Math.round((event.ticketPrice || 0) * 0.04 * 100) / 100;
-      const totalPrice = Math.round(((event.ticketPrice || 0) * ticketCount + platformFee) * 100) / 100;
-
-      // Ensure the host ID is properly passed
       if (!event.host || !event.host._id) {
         throw new Error("Host information is missing");
       }
@@ -52,63 +62,40 @@ function Eventpage() {
         title: event.title,
         location: `${event.city}, ${event.state}, ${event.country}`,
         image: event.images?.[0] || "",
-        host: {
-          name: `${event.host?.firstName || ''} ${event.host?.lastName || ''}`.trim(),
-          id: event.host?._id, // Make sure this matches what your backend expects
-          image: event.host?.image || "",
-        },
-        date: event.eventDateTime, // Changed from eventDate to match your schema
+        hostId: event.host?._id,
+        date: event.eventDateTime,
         ticketCount,
         ticketPrice: event.ticketPrice,
-        platformFee,
-        totalPrice,
+        hostName: `${event.host?.firstName} ${event.host?.lastName}`,
+        hostStripeAccount: event.host?.stripeAccountId,
       });
 
       if (response.data.checkoutUrl) {
         window.location.href = response.data.checkoutUrl;
       } else {
-        setError("Invalid response from server");
+        toast.error("Invalid response from server");
         setLoading(false);
       }
     } catch (error) {
       console.error("Error creating checkout session:", error);
-      setError(error.message || "Failed to create checkout session");
+      toast.error(error.message || "Failed to create checkout session");
       setLoading(false);
     }
   };
 
-  if (error) {
-    return (
-      <div className="max-w-6xl mx-auto p-4 text-center">
-        <div className="text-red-600 text-xl mb-4">{error}</div>
-        <button 
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg"
-        >
-          Try Again
-        </button>
-      </div>
-    );
-  }
-
-  if (!event) return (
-    <div className="flex items-center justify-center h-screen">
-      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-700"></div>
-    </div>
-  );
-
   return (
     <>
+      <ToastContainer />
       <div className="max-w-6xl mx-auto p-4">
         <h2 className="text-xl font-semibold mb-4">
-          {event.title || "Event Details"}
+          {event?.title || "Event Details"}
         </h2>
-        <ImageGallery images={event.images || []} />
+        <ImageGallery images={event?.images || []} />
       </div>
       <div className="max-w-6xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white shadow-lg p-6 rounded-lg border order-1 md:order-2 md:sticky md:top-20 self-start">
           <h2 className="text-xl font-bold">
-            ₹{event.ticketPrice || "N/A"}
+            ₹{event?.ticketPrice || "N/A"}
             <span className="text-sm font-normal">/Ticket</span>
           </h2>
           <p className="text-gray-600">Available Tickets: {availableTickets}</p>
@@ -123,19 +110,27 @@ function Eventpage() {
             placeholder="Enter the amount"
           />
           <p className="text-lg font-semibold mt-2">
-            Total: ₹{event.ticketPrice ? event.ticketPrice * ticketCount : "N/A"}
+            Total: ₹
+            {event?.ticketPrice ? event.ticketPrice * ticketCount : "N/A"}
           </p>
           <p className="text-sm text-gray-500 mt-1">
-            Platform fee: ₹{event.ticketPrice ? Math.round(event.ticketPrice * 0.04 * 100) / 100 : "N/A"}
-          </p>
-          <p className="text-lg font-semibold mt-2">
-            Grand Total: ₹{event.ticketPrice ? 
-              Math.round((event.ticketPrice * ticketCount + event.ticketPrice * 0.04) * 100) / 100 
+            Platform fee: ₹
+            {event?.ticketPrice
+              ? Math.round(event.ticketPrice * ticketCount * 0.04 * 100) / 100
               : "N/A"}
           </p>
+          <p className="text-lg font-semibold mt-2">
+            Grand Total: ₹
+            {event?.ticketPrice
+              ? Math.round(event.ticketPrice * ticketCount * 1.04 * 100) / 100
+              : "N/A"}
+          </p>
+
           <button
             onClick={handleReserve}
-            disabled={loading || ticketCount < 1 || ticketCount > availableTickets}
+            disabled={
+              loading || ticketCount < 1 || ticketCount > availableTickets
+            }
             className="w-full bg-button text-white py-2 rounded-lg font-semibold disabled:opacity-50 mt-4"
           >
             {loading ? "Processing..." : "Reserve"}
@@ -147,50 +142,87 @@ function Eventpage() {
 
         <div className="md:col-span-2 space-y-4 order-2 md:order-1">
           <h1 className="text-2xl font-bold">
-            Event in {event.state || "Unknown"}, {event.country || "Unknown"}
+            Event in {event?.state || "Unknown"}, {event?.country || "Unknown"}
           </h1>
-          <p className="text-gray-600">Event Type: {event.eventType || "N/A"}</p>
-          <p className="text-gray-600">Event Venue: {event.eventVenue || "N/A"}</p>
+          <p className="text-gray-600">
+            Event Type: {event?.eventType || "N/A"}
+          </p>
+          <p className="text-gray-600">
+            Event Venue: {event?.eventVenue || "N/A"}
+          </p>
           <p className="text-gray-700">
-            Location: {event.city || "N/A"}, {event.state || "N/A"},{" "}
-            {event.country || "N/A"}
+            Location: {event?.city || "N/A"}, {event?.state || "N/A"},{" "}
+            {event?.country || "N/A"}
           </p>
           <div className="border-t pt-4 flex items-center gap-3">
-            <Avatar>
-              <AvatarImage src={event.host?.image || ""} alt="Host Avatar" />
-              <AvatarFallback>
-                {event.host?.firstName?.charAt(0).toUpperCase() || "U"}
-              </AvatarFallback>
-            </Avatar>
-            <div>
-              <h3 className="font-semibold">
-                Hosted by {event.host?.firstName || "Unknown"}{" "}
-                {event.host?.lastName || ""}
-              </h3>
-              <p className="text-sm text-gray-500">
-                3 years hosting {event.host?.profileSetup && "· Verified Host"}
-              </p>
-            </div>
+            <Link
+              to={`/host/${event?.host?._id}`}
+              className="flex items-center gap-3 mb-4 cursor-pointer"
+            >
+              <Avatar>
+                <AvatarImage src={event?.host?.image || ""} alt="Host Avatar" />
+                <AvatarFallback>
+                  {event?.host?.firstName?.charAt(0).toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-semibold">
+                  Hosted by {event?.host?.firstName || "Unknown"}{" "}
+                  {event?.host?.lastName || ""}
+                </h3>
+                <p className="text-sm text-gray-500">
+                  3 years hosting{" "}
+                  {event?.host?.profileSetup && "· Verified Host"}
+                </p>
+              </div>
+            </Link>
           </div>
-          <p className="py-5">{event.description || "No description available."}</p>
+
+          <p className="py-5">
+            {event?.description || "No description available."}
+          </p>
           <h3 className="text-lg font-semibold mb-2">About this place</h3>
           <ul className="space-y-1 text-gray-700 text-sm">
-            {event.features && event.features.length > 0 ? (
-              event.features.map((feature) => <li key={feature._id}>{feature.text}</li>)
+            {event?.features && event?.features?.length > 0 ? (
+              event?.features.map((feature) => (
+                <ul key={feature._id}>{feature.text}</ul>
+              ))
             ) : (
               <li>No features listed</li>
             )}
           </ul>
           <h3 className="text-xl font-bold">Where you'll be</h3>
-          <p>
-            {event.street || ""}, {event.city || ""}, {event.state || ""},{" "}
-            {event.country || ""}
-          </p>
-          {event.location && (
-            <MapWithDirectionButton lat={event.location.lat} lng={event.location.lng} />
-          )}
+          {/* <p>
+            {event.street}, {event.city}, {event.state}, {event.country}
+          </p> */}
+          {/* <MapWithDirectionButton
+            lat={event.location?.lat}
+            lng={event.location?.lng}
+          /> */}
         </div>
       </div>
+
+      <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
+        <DialogContent className="p-6">
+          <h1 className="text-center">Create a new account to book tickets</h1>
+          <Button variant="outline" className="w-full mt-5" onClick={() => {}}>
+            <img
+              src="https://img.icons8.com/color/24/000000/google-logo.png"
+              alt="Google Logo"
+              className="mr-2"
+            />
+            Login with Google
+          </Button>
+          <Button variant="outline" className="w-full mt-3" onClick={() => {}}>
+            <img
+              src="https://img.icons8.com/color/24/000000/email.png"
+              alt="Email Logo"
+              className="mr-2"
+            />
+            Signup with Email
+          </Button>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

@@ -11,8 +11,6 @@ const generateOtp = () =>
 
 exports.sendOtp = async (req, res) => {
   const { email } = req.body;
-  console.log(process.env.EMAIL_USER, process.env.EMAIL_PASS);
-  console.log(email);
 
   const otp = generateOtp();
 
@@ -36,7 +34,6 @@ exports.sendOtp = async (req, res) => {
 
 exports.verifyOtp = async (req, res) => {
   const { username, email, password, otp } = req.body;
-  console.log(req.body);
 
   try {
     const otpDoc = await Otp.findOne({ email, otp });
@@ -84,7 +81,7 @@ exports.userlogin = async (req, res) => {
     if (!user.password || !(await bcrypt.compare(password, user.password))) {
       return res.status(404).send("The password is incorrect");
     }
-    console.log('after pass');
+
     
 
     const token = jwt.sign({ email: user.email, userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });

@@ -13,7 +13,7 @@ const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSave
   
   const handleSave = async (e) => {
     e.stopPropagation();
-    try {
+    try {stripeAccountId
       const response = await axiosInstance.post(
         `/user/save/${_id}`,
         { type: "event" },

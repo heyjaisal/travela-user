@@ -58,7 +58,7 @@ const Userprofile = () => {
   }, [id]);
 
   if (!user) return <div className="text-center mt-10">Loading...</div>;
-  console.log(user);
+
   
   return (
     <div className="flex flex-col md:flex-row p-4 max-w-6xl mx-auto">

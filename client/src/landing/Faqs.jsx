@@ -80,7 +80,7 @@ FaqItem.propTypes = {
 const Faq10 = () => {
 	return (
 		<section className="ezy__faq10 light py-14 md:py-24 bg-white dark:bg-[#0b1727] text-zinc-900 dark:text-white">
-			<div className="container px-16 md:px-8 lg:px-28">
+			<div className="container px-10 md:px-8 lg:px-28">
 				<div className="grid grid-cols-12">
 					<div className="col-span-12 lg:col-span-8 mb-12">
 						<h2 className="font-bold text-[25px] md:text-[45px] leading-none mb-6">

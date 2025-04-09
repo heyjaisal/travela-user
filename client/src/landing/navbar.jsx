@@ -96,7 +96,7 @@ export default function NavbarComponent() {
               <DropdownMenuContent className="w-48">
                 <DropdownMenuLabel>Menu</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate("/booking")}>Booking</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate("/booked")}>Booked</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/notification")}>Notification</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/messages")}>Messages</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/saved")}>Saved</DropdownMenuItem>

@@ -1,9 +1,11 @@
 const express = require("express");
-const { createCheckoutSession, capturePayment } = require("../controllers/checkout.controller");
+const { eventCheckoutSession, EventcapturePayment,PropertycapturePayment ,propertyCheckoutSession} = require("../controllers/checkout.controller");
+const authMiddleware = require("../middleware/authentication");
 const router = express.Router();
 
-// router.post('/payment',checkout)
-router.post("/event", createCheckoutSession);
-router.post("/capture-payment", capturePayment);
+router.post("/event",authMiddleware, eventCheckoutSession);
+router.post("/property",authMiddleware, propertyCheckoutSession);
+router.post("/Ecapture-payment", EventcapturePayment);
+router.post("/Pcapture-payment", PropertycapturePayment);
 
 module.exports = router;

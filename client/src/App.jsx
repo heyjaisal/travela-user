@@ -7,6 +7,7 @@ import Navbar from "./landing/navbar";
 import axiosInstance from "./utils/axios-instance";
 import Bookingsucces from "./event/booking-succes";
 import Boookingfail from "./event/boooking-fail";
+import Success from "./property/succes";
 
 const Landing = lazy(() => import("./landing/Landing"));
 const Signup = lazy(() => import("./auth/Signup"));
@@ -23,11 +24,11 @@ const Booked = lazy(() => import("./pages/Booked"));
 const Profile = lazy(() => import("./pages/profile"));
 const Account = lazy(() => import("./pages/Account"));
 const UserProfile = lazy(() => import("./users/user-profile"));
+const HostProfile = lazy(() => import("./users/host"));
 const EventPage = lazy(() => import("./event/event-page"));
 const PropertyPage = lazy(() => import("./property/property-page"));
 const AboutUs = lazy(() => import("./landing/about-us"));
 const Fallback = lazy(() => import("./components/fallback"));
-const Checkout = lazy(() => import("./property/checkout"));
 const ECheckout = lazy(() => import("./event/succes"));
 
 const App = () => {
@@ -96,7 +97,8 @@ const App = () => {
                   <Route path="/booked" element={<Booked />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/account" element={<Account />} />
-                  <Route path="/success" element={<ECheckout />} />
+                  <Route path="/event-success" element={<ECheckout />} />
+                  <Route path="/property-success" element={<Success />} />
                   <Route
                     path="/booking-confirmed"
                     element={<Bookingsucces />}
@@ -104,9 +106,9 @@ const App = () => {
                   <Route path="/booking-failed" element={<Boookingfail />} />
                   <Route path="/about-us" element={<AboutUs />} />
                   <Route path="/user/:id" element={<UserProfile />} />
+                  <Route path="/host/:id" element={<HostProfile />} />
                   <Route path="/event/:id" element={<EventPage />} />
                   <Route path="/property/:id" element={<PropertyPage />} />
-                  <Route path="/property/checkout" element={<Checkout />} />
                   <Route path="*" element={<Fallback />} />
                 </Routes>
               </>

@@ -3,7 +3,7 @@ import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import axiosInstance from "@/utils/axios-instance";
 import { useSelector } from "react-redux";
 
-const Success = () => {
+const SuccessProperty = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,18 +17,16 @@ const Success = () => {
 
   useEffect(() => {
     const capturePayment = async () => {
-      if (!sessionId ||isProcessing.current) return;
+      if (!sessionId || isProcessing.current) return;
       isProcessing.current = true;
-
+    
       try {
-        if (!sessionId) throw new Error("Missing session ID");
-
-        const response = await axiosInstance.post("/checkout/Ecapture-payment", {
+        const response = await axiosInstance.post("/checkout/Pcapture-payment", {
           sessionId,
         });
-
+    
         if (response.data.success) {
-          setBooking(response.data); 
+          setBooking(response.data);
           setTimeout(() => {
             navigate("/booking-confirmed", { state: response.data, replace: true });
           }, 1000);
@@ -42,6 +40,7 @@ const Success = () => {
         setIsLoading(false);
       }
     };
+    
 
     capturePayment();
   }, [sessionId, navigate]);
@@ -62,4 +61,4 @@ const Success = () => {
   );
 };
 
-export default Success;
+export default SuccessProperty;

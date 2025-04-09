@@ -1,20 +1,31 @@
 import ImageGallery from "@/components/image";
 import MapWithDirectionButton from "@/components/map";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Calendar } from "@/components/ui/calendar";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@heroui/react";
+import { today, getLocalTimeZone, parseDate } from "@internationalized/date";
+import { useLocale } from "@react-aria/i18n";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import axiosInstance from "@/utils/axios-instance";
 import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { useNavigate, useParams, Link } from "react-router-dom";
+import { toast, ToastContainer } from "react-toastify";
 
 function PropertyPage() {
+  const { locale } = useLocale();
   const { id } = useParams();
   const navigate = useNavigate();
   const [property, setProperty] = useState(null);
   const [checkIn, setCheckIn] = useState(null);
   const [checkOut, setCheckOut] = useState(null);
   const [showCalendar, setShowCalendar] = useState(null);
-  const [bookedDates, setBookedDates] = useState([]);
+  const [disabledRanges, setDisabledRanges] = useState([]);
+  const userInfo = useSelector((state) => state.auth.userInfo);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [guests, setGuests] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchProperty = async () => {
@@ -25,19 +36,13 @@ function PropertyPage() {
         });
         setProperty(data.item);
 
-        // Fetch booked dates
-        if (data.item.bookings) {
-          const bookedRanges = data.item.bookings.map((booking) => {
-            const start = new Date(booking.checkIn);
-            const end = new Date(booking.checkOut);
-            const dates = [];
-            while (start <= end) {
-              dates.push(new Date(start));
-              start.setDate(start.getDate() + 1);
-            }
-            return dates;
+        if (data.item.bookedDates && data.item.bookedDates.length > 0) {
+          const ranges = data.item.bookedDates.map((booking) => {
+            const startDate = parseDate(booking.checkIn);
+            const endDate = parseDate(booking.checkOut);
+            return [startDate, endDate];
           });
-          setBookedDates(bookedRanges.flat());
+          setDisabledRanges(ranges);
         }
       } catch (error) {
         console.error("Error fetching property details:", error);
@@ -47,21 +52,79 @@ function PropertyPage() {
     if (id) fetchProperty();
   }, [id]);
 
+  const isDateUnavailable = (date) => {
+    return disabledRanges.some(
+      (interval) =>
+        date.compare(interval[0]) >= 0 && date.compare(interval[1]) <= 0
+    );
+  };
+
+  const handleReserve = async () => {
+    if (!userInfo) {
+      setShowLoginModal(true);
+      return;
+    }
+    setLoading(true);
+
+    try {
+      if (!property.host || !property.host._id) {
+        throw new Error("Host information is missing");
+      }
+
+      const response = await axiosInstance.post("/checkout/property", {
+        propertyId: id,
+        title: property.title,
+        location: `${property.city}, ${property.state}, ${property.country}`,
+        image: property.images?.[0] || "",
+        hostId: property.host?._id,
+        date: property.eventDateTime,
+        checkIn: checkIn,
+        checkOut: checkOut,
+        price: property.price,
+        hostName: `${property.host?.firstName} ${property.host?.lastName}`,
+        hostStripeAccount: property.host?.stripeAccountId,
+        guests: guests,
+      });
+
+      if (response.data.checkoutUrl) {
+        window.location.href = response.data.checkoutUrl;
+      } else {
+        toast.error("Invalid response from server");
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error("Error creating checkout session:", error);
+      toast.error(error.message || "Failed to create checkout session");
+      setLoading(false);
+    }
+  };
+
   if (!property) return <p className="text-center mt-10">Loading...</p>;
 
-  const fullName =
-    property.host?.firstName && property.host?.lastName
-      ? `${property.host.firstName} ${property.host.lastName}`
-      : property.host?.username;
+const getNumberOfNights = () => {
+  if (!checkIn || !checkOut) return 0;
+  const diffTime = checkOut - checkIn;
+  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return days === 0 ? 1 : days;
+};
 
-  const getNumberOfNights = () => {
-    if (!checkIn || !checkOut) return 0;
-    const diffTime = Math.abs(checkOut - checkIn);
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+  const isReserveDisabled = !checkIn || !checkOut || !guests || guests <= 0;
+
+  const handleDateSelect = (date) => {
+    if (showCalendar === "checkin") {
+      const jsDate = new Date(date.year, date.month - 1, date.day);
+      setCheckIn(jsDate);
+    } else {
+      const jsDate = new Date(date.year, date.month - 1, date.day);
+      setCheckOut(jsDate);
+    }
+    setShowCalendar(null);
   };
 
   return (
     <>
+      <ToastContainer />
       <div className="max-w-6xl mx-auto p-4">
         <h2 className="text-xl font-semibold mb-4">
           {property.title || "Property Details"}
@@ -100,23 +163,18 @@ function PropertyPage() {
           {showCalendar && (
             <div
               className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
-              onClick={() => setShowCalendar(null)}
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setShowCalendar(null);
+              }}
             >
-              <div className="bg-white p-4 rounded-lg shadow-lg relative">
+              <div
+                className="bg-white p-4 rounded-lg shadow-lg relative"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <Calendar
-                  mode="single"
-                  selected={showCalendar === "checkin" ? checkIn : checkOut}
-                  onSelect={(date) => {
-                    if (showCalendar === "checkin") setCheckIn(date);
-                    else setCheckOut(date);
-                    setShowCalendar(null);
-                  }}
-                  disabled={(date) =>
-                    bookedDates.some(
-                      (d) => d.toDateString() === date.toDateString()
-                    )
-                  }
-                  className="rounded-md border shadow"
+                  aria-label="Date Selection"
+                  isDateUnavailable={isDateUnavailable}
+                  onChange={handleDateSelect}
                 />
               </div>
             </div>
@@ -129,32 +187,29 @@ function PropertyPage() {
               </h3>
               <p className="text-sm text-gray-600">
                 Total: ₹{property.price * getNumberOfNights()} for{" "}
-                {getNumberOfNights()} night{getNumberOfNights() > 1 ? "s" : ""}
+                {getNumberOfNights()} night
+                {getNumberOfNights() > 1 ? "s" : ""}
               </p>
             </div>
           )}
 
           <div className="mb-3">
             <h1>Max Guests: {property.maxStay}</h1>
-            <Input placeholder="Add Guests" />
+            <Input
+              placeholder="Add Guests"
+              type="number"
+              min="1"
+              value={guests}
+              onChange={(e) => setGuests(e.target.value)}
+            />
           </div>
           <button
-  onClick={() =>
-    navigate("/property/checkout", {
-      state: {
-        property,
-        checkIn,
-        checkOut,
-        totalNights: getNumberOfNights(),
-        totalPrice: property.price * getNumberOfNights(),
-      },
-    })
-  }
-  className="w-full bg-button text-white py-2 rounded-lg font-semibold"
->
-  Reserve
-</button>
-
+            onClick={handleReserve}
+            disabled={isReserveDisabled || loading}
+            className="w-full bg-button text-white py-2 rounded-lg font-semibold disabled:opacity-50 mt-4"
+          >
+            {loading ? "Processing..." : "Reserve"}
+          </button>
           <p className="text-center text-sm text-gray-500 mt-2">
             You won't be charged yet
           </p>
@@ -171,7 +226,11 @@ function PropertyPage() {
           <p className="text-gray-700">
             Location: {property.city}, {property.state}, {property.country}
           </p>
-          <div className="border-t pt-4 flex items-center gap-3">
+
+          <Link
+            to={`/host/${property?.host?._id}`}
+            className="border-t pt-4 flex items-center gap-3"
+          >
             <Avatar>
               <AvatarImage src={property.host?.image} alt="Host Avatar" />
               <AvatarFallback>
@@ -182,25 +241,26 @@ function PropertyPage() {
             </Avatar>
             <div>
               <h3 className="font-semibold">
-                Hosted by {fullName || "unknown host"}
+                Hosted by {property?.host?.firstName || "Unknown"}{" "}
+                {property?.host?.lastName || ""}
               </h3>
               <p className="text-sm text-gray-500">
                 3 years hosting · Verified Host
               </p>
             </div>
-          </div>
+          </Link>
           <p className="py-5">{property.description}</p>
           <h3 className="text-lg font-semibold mb-2">About this place</h3>
           <ul className="space-y-1 text-gray-700 text-sm">
             {property.features && property.features.length > 0 ? (
               property.features.map((feature) => (
-                <li key={feature._id}>{feature.text}</li>
+                <ul key={feature._id}>{feature.text}</ul>
               ))
             ) : (
               <li>No features listed</li>
             )}
           </ul>
-          <h3 className="text-xl font-bold">Where you’ll be</h3>
+          <h3 className="text-xl font-bold">Where you'll be</h3>
           <p>
             {property.street}, {property.city}, {property.state},{" "}
             {property.country}
@@ -211,9 +271,30 @@ function PropertyPage() {
           />
         </div>
       </div>
+
+      <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
+        <DialogContent className="p-6">
+          <h1 className="text-center">Create a new account to book tickets</h1>
+          <Button variant="outline" className="w-full mt-5" onClick={() => {}}>
+            <img
+              src="https://img.icons8.com/color/24/000000/google-logo.png"
+              alt="Google Logo"
+              className="mr-2"
+            />
+            Login with Google
+          </Button>
+          <Button variant="outline" className="w-full mt-3" onClick={() => {}}>
+            <img
+              src="https://img.icons8.com/color/24/000000/email.png"
+              alt="Email Logo"
+              className="mr-2"
+            />
+            Signup with Email
+          </Button>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
 
 export default PropertyPage;
-

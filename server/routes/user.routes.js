@@ -6,7 +6,7 @@ const { Likes } = require("../controllers/blog.controller");
 const router = express.Router();
 
 router.post("/search", authorization, searchUser);
-router.get("/:id", authorization, userDetails);
+router.get("/:id", userDetails);
 router.get("/:id/blogs", authorization, getUserBlogs);
 router.post('/save/:id',authorization,SaveItem)
 

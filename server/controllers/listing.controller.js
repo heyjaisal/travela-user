@@ -3,6 +3,8 @@ const User = require("../models/User");
 const Blog = require("../models/Blog");
 const Property = require("../models/Property");
 const Booking = require("../models/Booking");
+const Reserve = require("../models/Booking");
+const Ticket = require("../models/Ticket");
 
 exports.getListings = async (req, res) => {
   try {
@@ -162,33 +164,119 @@ exports.detailList = async (req, res) => {
   try {
     if (type === "event") {
       item = await Events.findById(id)
-        .populate("host", "username image email firstName lastName")
+        .populate(
+          "host",
+          "username image email firstName lastName stripeAccountId"
+        )
         .lean();
     } else if (type === "property") {
       item = await Property.findById(id)
-        .populate("host", "username image firstName lastName email")
+        .populate(
+          "host",
+          "username image firstName lastName email stripeAccountId"
+        )
         .lean();
 
       const bookings = await Booking.find({
         property: id,
-        status: "confirmed",
+        bookingStatus: "confirmed",
       }).select("checkIn checkOut");
 
-      const bookedDates = [];
-      bookings.forEach(({ checkIn, checkOut }) => {
-        let date = new Date(checkIn);
-        while (date <= checkOut) {
-          bookedDates.push(new Date(date));
-          date.setDate(date.getDate() + 1);
-        }
-      });
-
-      item.bookedDates = bookedDates; 
+      item.bookedDates = bookings.map(({ checkIn, checkOut }) => ({
+        checkIn: checkIn.toISOString().split("T")[0],
+        checkOut: checkOut.toISOString().split("T")[0],
+      }));
     }
 
     res.json({ item });
   } catch (error) {
     console.error(`Error fetching ${type}:`, error);
     res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+exports.BookedListings = async (req, res) => {
+  try {
+    const { type, page = 1, limit = 6 } = req.query;
+    const userId = req.userId;
+
+    if (!type) {
+      return res.status(400).json({ message: "Listing type is required" });
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    let listings = [];
+    let totalListings = 0;
+
+    if (type === "property") {
+      totalListings = await Reserve.countDocuments({ user: userId });
+      listings = await Reserve.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .select("_id checkIn checkOut guests totalAmount transactionId qrCode platformFee isCheckedIn")
+        .populate("property", "propertyType title price country city images")
+        .populate("hostId", "username image")
+        .skip(skip)
+        .limit(Number(limit))
+        .lean();
+    } else if (type === "event") {
+      totalListings = await Ticket.countDocuments({ user: userId });
+      listings = await Ticket.find({ user: userId })
+        .sort({ createdAt: -1 })
+        .select("_id ticketsBooked totalAmount bookingStatus paymentStatus refundStatus qrCode isCheckedIn transactionId")
+        .populate("hostId", "username image")
+        .populate("event", "eventType title eventVenue ticketPrice country city images")
+        .skip(skip)
+        .limit(Number(limit))
+        .lean();
+    }
+
+    const hasMore = skip + listings.length < totalListings;
+
+    res.json({ listings, hasMore, type });
+  } catch (error) {
+    console.error("Error fetching listings:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.hostProfileLising = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type, page = 1, limit = 10 } = req.query;
+
+    if (!type) {
+      return res.status(400).json({ message: "Listing type is required" });
+    }
+
+    const skip = (Number(page) - 1) * Number(limit);
+    const query = { host: id };
+    let listings = [];
+    let totalListings = 0;
+
+    if (type === "property") {
+      totalListings = await Property.countDocuments(query);
+      listings = await Property.find(query)
+        .sort({ createdAt: -1 })
+        .select("propertyType images price country city")
+        .skip(skip)
+        .limit(Number(limit))
+        .lean();
+    } else if (type === "event") {
+      totalListings = await Events.countDocuments(query);
+      listings = await Events.find(query)
+        .sort({ createdAt: -1 })
+        .select("title images eventVenue country ticketPrice city")
+        .skip(skip)
+        .limit(Number(limit))
+        .lean();
+    } else {
+      return res.status(400).json({ message: "Invalid listing type" });
+    }
+
+    const hasMore = skip + listings.length < totalListings;
+    res.json({ listings, hasMore, type });
+  } catch (error) {
+    console.error("Error fetching listings:", error);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };

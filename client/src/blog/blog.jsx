@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import axiosInstance from "../utils/axios-instance";
 import { ScaleLoader } from "react-spinners";
 import RenderContent from "./renderContent";
@@ -42,14 +42,16 @@ const BlogDetail = () => {
       <img src={blog.thumbnail} alt={blog.title} className="w-full h-64 object-cover rounded-lg mb-6" />
 
       <div className="flex items-center gap-3 mb-4">
-        <Avatar>
-          <AvatarImage src={blog.author?.image} alt={blog.author?.username} />
-          <AvatarFallback>{blog.author?.username?.charAt(0).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div>
-          <p className="text-lg font-semibold">{blog.author?.username}</p>
-          <p className="text-gray-500">{new Date(blog.createdAt).toLocaleDateString()}</p>
-        </div>
+      <Link to={`/user/${blog.author?._id}`} className="flex items-center gap-3 mb-4 cursor-pointer">
+  <Avatar>
+    <AvatarImage src={blog.author?.image} alt={blog.author?.username} />
+    <AvatarFallback>{blog.author?.username?.charAt(0).toUpperCase()}</AvatarFallback>
+  </Avatar>
+  <div>
+    <p className="text-lg font-semibold">{blog.author?.username}</p>
+    <p className="text-gray-500">{new Date(blog.createdAt).toLocaleDateString()}</p>
+  </div>
+</Link>
       </div>
 
       <hr className="border-t border-gray-300 my-4" />
