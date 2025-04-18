@@ -35,7 +35,6 @@ function PropertyPage() {
           withCredentials: true,
         });
         setProperty(data.item);
-
         if (data.item.bookedDates && data.item.bookedDates.length > 0) {
           const ranges = data.item.bookedDates.map((booking) => {
             const startDate = parseDate(booking.checkIn);
@@ -48,15 +47,36 @@ function PropertyPage() {
         console.error("Error fetching property details:", error);
       }
     };
-
     if (id) fetchProperty();
   }, [id]);
 
   const isDateUnavailable = (date) => {
-    return disabledRanges.some(
+    const todayDate = today(getLocalTimeZone());
+    const isPast = date.compare(todayDate) < 0;
+    return isPast || disabledRanges.some(
       (interval) =>
         date.compare(interval[0]) >= 0 && date.compare(interval[1]) <= 0
     );
+  };
+
+  const getNumberOfNights = () => {
+    if (!checkIn || !checkOut) return 0;
+    const diffTime = checkOut - checkIn;
+    const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return days === 0 ? 1 : days;
+  };
+
+  const isReserveDisabled =
+    !checkIn || !checkOut || !guests || guests <= 0 || guests > property?.maxGuests;
+
+  const handleDateSelect = (date) => {
+    const jsDate = new Date(date.year, date.month - 1, date.day);
+    if (showCalendar === "checkin") {
+      setCheckIn(jsDate);
+    } else {
+      setCheckOut(jsDate);
+    }
+    setShowCalendar(null);
   };
 
   const handleReserve = async () => {
@@ -64,13 +84,15 @@ function PropertyPage() {
       setShowLoginModal(true);
       return;
     }
+    if (guests > property.maxGuests) {
+      toast.error(`Only ${property.maxGuests} guests allowed for this property.`);
+      return;
+    }
     setLoading(true);
-
     try {
       if (!property.host || !property.host._id) {
         throw new Error("Host information is missing");
       }
-
       const response = await axiosInstance.post("/checkout/property", {
         propertyId: id,
         title: property.title,
@@ -78,14 +100,13 @@ function PropertyPage() {
         image: property.images?.[0] || "",
         hostId: property.host?._id,
         date: property.eventDateTime,
-        checkIn: checkIn,
-        checkOut: checkOut,
+        checkIn,
+        checkOut,
         price: property.price,
         hostName: `${property.host?.firstName} ${property.host?.lastName}`,
         hostStripeAccount: property.host?.stripeAccountId,
-        guests: guests,
+        guests,
       });
-
       if (response.data.checkoutUrl) {
         window.location.href = response.data.checkoutUrl;
       } else {
@@ -99,28 +120,11 @@ function PropertyPage() {
     }
   };
 
-  if (!property) return <p className="text-center mt-10">Loading...</p>;
-
-const getNumberOfNights = () => {
-  if (!checkIn || !checkOut) return 0;
-  const diffTime = checkOut - checkIn;
-  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-  return days === 0 ? 1 : days;
-};
-
-
-  const isReserveDisabled = !checkIn || !checkOut || !guests || guests <= 0;
-
-  const handleDateSelect = (date) => {
-    if (showCalendar === "checkin") {
-      const jsDate = new Date(date.year, date.month - 1, date.day);
-      setCheckIn(jsDate);
-    } else {
-      const jsDate = new Date(date.year, date.month - 1, date.day);
-      setCheckOut(jsDate);
-    }
-    setShowCalendar(null);
+  const handleGoogleSignup = () => {
+    window.location.href = "http://localhost:5000/auth/google";
   };
+
+  if (!property) return <p className="text-center mt-10">Loading...</p>;
 
   return (
     <>
@@ -140,19 +144,13 @@ const getNumberOfNights = () => {
           <p className="text-sm text-gray-600">Availability: Available</p>
           <div className="border p-3 rounded-lg my-4">
             <div className="flex justify-between">
-              <div
-                onClick={() => setShowCalendar("checkin")}
-                className="cursor-pointer"
-              >
+              <div onClick={() => setShowCalendar("checkin")} className="cursor-pointer">
                 <p className="text-sm text-gray-600">CHECK-IN</p>
                 <p className="font-normal">
                   {checkIn ? checkIn.toDateString() : "Select Date"}
                 </p>
               </div>
-              <div
-                onClick={() => setShowCalendar("checkout")}
-                className="cursor-pointer"
-              >
+              <div onClick={() => setShowCalendar("checkout")} className="cursor-pointer">
                 <p className="text-sm text-gray-600">CHECKOUT</p>
                 <p className="font-normal">
                   {checkOut ? checkOut.toDateString() : "Select Date"}
@@ -179,20 +177,17 @@ const getNumberOfNights = () => {
               </div>
             </div>
           )}
-
           {checkIn && checkOut && (
             <div className="my-4">
               <h3 className="text-xl font-semibold">
                 Total Price: ₹{property.price * getNumberOfNights()}
               </h3>
               <p className="text-sm text-gray-600">
-                Total: ₹{property.price * getNumberOfNights()} for{" "}
-                {getNumberOfNights()} night
+                Total: ₹{property.price * getNumberOfNights()} for {getNumberOfNights()} night
                 {getNumberOfNights() > 1 ? "s" : ""}
               </p>
             </div>
           )}
-
           <div className="mb-3">
             <h1>Max Guests: {property.maxStay}</h1>
             <Input
@@ -226,7 +221,6 @@ const getNumberOfNights = () => {
           <p className="text-gray-700">
             Location: {property.city}, {property.state}, {property.country}
           </p>
-
           <Link
             to={`/host/${property?.host?._id}`}
             className="border-t pt-4 flex items-center gap-3"
@@ -254,7 +248,7 @@ const getNumberOfNights = () => {
           <ul className="space-y-1 text-gray-700 text-sm">
             {property.features && property.features.length > 0 ? (
               property.features.map((feature) => (
-                <ul key={feature._id}>{feature.text}</ul>
+                <li key={feature._id}>{feature.text}</li>
               ))
             ) : (
               <li>No features listed</li>
@@ -262,8 +256,7 @@ const getNumberOfNights = () => {
           </ul>
           <h3 className="text-xl font-bold">Where you'll be</h3>
           <p>
-            {property.street}, {property.city}, {property.state},{" "}
-            {property.country}
+            {property.street}, {property.city}, {property.state}, {property.country}
           </p>
           <MapWithDirectionButton
             lat={property.location?.lat}
@@ -273,23 +266,11 @@ const getNumberOfNights = () => {
       </div>
 
       <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
-        <DialogContent className="p-6">
-          <h1 className="text-center">Create a new account to book tickets</h1>
-          <Button variant="outline" className="w-full mt-5" onClick={() => {}}>
-            <img
-              src="https://img.icons8.com/color/24/000000/google-logo.png"
-              alt="Google Logo"
-              className="mr-2"
-            />
-            Login with Google
-          </Button>
-          <Button variant="outline" className="w-full mt-3" onClick={() => {}}>
-            <img
-              src="https://img.icons8.com/color/24/000000/email.png"
-              alt="Email Logo"
-              className="mr-2"
-            />
-            Signup with Email
+        <DialogContent className="p-6 text-center space-y-4">
+          <h2 className="text-xl font-semibold">Login Required</h2>
+          <p className="text-gray-600">Please log in with Google to reserve this property.</p>
+          <Button onClick={handleGoogleSignup} className="w-full bg-button text-white">
+            Continue with Google
           </Button>
         </DialogContent>
       </Dialog>

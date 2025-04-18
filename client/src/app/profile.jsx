@@ -20,7 +20,7 @@ const ProfileDialog = () => {
   const [image, setImage] = useState(userinfo?.image || null);
   const [loading, setLoading] = useState(false);
   const [hovered, setHovered] = useState(false);
-    const [errors, setErrors] = useState({});
+  const [errors, setErrors] = useState({});
   const [profileData, setProfileData] = useState({
     firstName: "",
     lastName: "",
@@ -62,6 +62,7 @@ const ProfileDialog = () => {
 
   const handleSave = async () => {
     if (validateFields()) {
+      setLoading(true);
       try {
         const { data } = await axiosInstance.put(
           `/auth/profile`,
@@ -72,14 +73,14 @@ const ProfileDialog = () => {
         toast.success("Profile details submitted successfully!");
       } catch (error) {
         toast.error("Failed to update profile");
+      } finally {
+        setLoading(false);
       }
     }
   };
   
   const logOut = async () => {
-    const response = await axiosInstance.get(`/auth/logout`, {
-      withCredentials: true,
-    });
+    const response = await axiosInstance.get(`/auth/logout`, { withCredentials: true });
     if (response.status === 200) {
       dispatch(setUserInfo(undefined));
       navigate("/");
@@ -108,7 +109,6 @@ const ProfileDialog = () => {
         toast.success("Image uploaded successfully!");
       }
     } catch (error) {
-      console.error("Error uploading image:", error);
       toast.error("Failed to upload image");
     } finally {
       setLoading(false);
@@ -116,14 +116,12 @@ const ProfileDialog = () => {
   };
 
   const deleteImage = async () => {
+    if (!image) return;
     setLoading(true);
     try {
       const response = await axiosInstance.delete(`/delete`, {
         withCredentials: true,
-        data: {
-          image: image,
-          type: "profile",
-        },
+        data: { image, type: "profile" },
       });
 
       if (response.status === 200) {
@@ -132,13 +130,11 @@ const ProfileDialog = () => {
         toast.success("Image deleted successfully!");
       }
     } catch (error) {
-      console.error("Error deleting image:", error);
       toast.error("Failed to delete image");
     } finally {
       setLoading(false);
     }
   };
-
 
   return (
     <Dialog>
@@ -168,55 +164,58 @@ const ProfileDialog = () => {
               </div>
             )}
             <input
-                  type="file"
-                  ref={fileInputRef}
-                  className="hidden"
-                  onChange={handleImage}
-                  name="profile-image"
-                  accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
-                />
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleImage}
+              accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
+            />
           </div>
         </div>
 
-        {/* Profile Fields */}
+=
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          <div>
-            <Label>Username</Label>
-            <Input name="username" value={profileData.username} onChange={handleFieldChange} />
-          </div>
-
-          <div>
-            <Label>First Name</Label>
-            <Input name="firstName" value={profileData.firstName} onChange={handleFieldChange} />
-          </div>
-
-          <div>
-            <Label>Last Name</Label>
-            <Input name="lastName" value={profileData.lastName} onChange={handleFieldChange} />
-          </div>
-
-          <div>
-            <Label>City</Label>
-            <Input name="city" value={profileData.city} onChange={handleFieldChange} />
-          </div>
-
-          <div>
-            <Label>Country</Label>
-            <Input name="country" value={profileData.country} onChange={handleFieldChange} />
-          </div>
-
-          <div>
-            <Label>Email</Label>
-            <Input name="email" value={profileData.email} disabled className="bg-gray-100 cursor-not-allowed" />
-          </div>
+          {['username', 'firstName', 'lastName', 'city', 'country', 'email'].map((field, index) => (
+            <div key={index}>
+              <Label>{field.charAt(0).toUpperCase() + field.slice(1)}</Label>
+              <Input 
+                name={field} 
+                value={profileData[field]} 
+                onChange={handleFieldChange} 
+                disabled={field === 'email'}
+              />
+              {errors[field] && <div className="text-red-500 text-sm">{errors[field]}</div>}
+            </div>
+          ))}
         </div>
 
-<div className="flex justify-end space-x-2 mt-3">
-  <Button className="bg-blue-500 text-white px-3 py-1 text-sm">Save</Button>
-  <Button className="bg-red-500 text-white px-3 py-1 text-sm" variant="destructive">Logout</Button>
-</div>
+        <div className="flex justify-end space-x-2 mt-3">
+          <Button 
+            className="bg-blue-500 text-white px-3 py-1 text-sm" 
+            onClick={handleSave} 
+            disabled={loading}>
+           {loading ? ( <svg
+              className="animate-spin h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8v2a6 6 0 100 12v2a8 8 0 01-8-8z"
+              />
+            </svg>) : "Save"}
+          </Button>
+          <Button 
+            className="bg-red-500 text-white px-3 py-1 text-sm" 
+            variant="destructive" 
+            onClick={logOut}>
+            Logout
+          </Button>
+        </div>
 
-        
         <ToastContainer />
       </DialogContent>
     </Dialog>

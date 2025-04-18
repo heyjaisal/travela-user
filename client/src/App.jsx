@@ -24,7 +24,7 @@ const Booked = lazy(() => import("./pages/Booked"));
 const Profile = lazy(() => import("./pages/profile"));
 const Account = lazy(() => import("./pages/Account"));
 const UserProfile = lazy(() => import("./users/user-profile"));
-const HostProfile = lazy(() => import("./users/host"));
+const HostProfile = lazy(() => import("./users/host-profile"));
 const EventPage = lazy(() => import("./event/event-page"));
 const PropertyPage = lazy(() => import("./property/property-page"));
 const AboutUs = lazy(() => import("./landing/about-us"));

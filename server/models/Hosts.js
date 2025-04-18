@@ -16,6 +16,7 @@ const hostSchema = new mongoose.Schema(
     city: { type: String },
     phone: { type: Number },
     gender: { type: String, enum: ["male", "female"] },
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
     stripeAccountId: { type: String, required: true }, 
   },
   { timestamps: true }

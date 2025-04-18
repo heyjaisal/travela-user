@@ -46,7 +46,7 @@ exports.eventCheckoutSession = async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "inr",
             product_data: {
               name: `${title} - ${ticketCount} Ticket(s)`,
               description: `Location: ${location}\nHost: ${hostName}`,
@@ -130,7 +130,7 @@ exports.propertyCheckoutSession = async (req, res) => {
       line_items: [
         {
           price_data: {
-            currency: "usd",
+            currency: "inr",
             product_data: {
               name: `${title} - ${Nights} Night${Nights > 1 ? "s" : ""}`,
               description: `Location: ${location}\nHost: ${hostName} \nGuest ${guest}`,
@@ -175,6 +175,7 @@ exports.PropertycapturePayment = async (req, res) => {
       hostId,
       userId,
       guest,
+      Nights,
       totalPrice,
       hostName,
       checkIn,
@@ -198,8 +199,8 @@ exports.PropertycapturePayment = async (req, res) => {
         });
     }
 
-    const platformFee = Math.round(paymentIntent.amount * 0.04);
-
+    const platformFee = Math.round(totalPrice * 0.04);
+    
     const booking = await Reserve.create({
       user: userId,
       property: propertyId,
@@ -207,6 +208,7 @@ exports.PropertycapturePayment = async (req, res) => {
       checkIn,
       checkOut,
       guests: guest,
+      Nights,
       totalAmount: totalPrice,
       transactionId: paymentIntent.id,
       bookingStatus: "confirmed",
@@ -215,7 +217,7 @@ exports.PropertycapturePayment = async (req, res) => {
       hostName,
       hostPayoutStatus: "pending",
       isCheckedIn: false,
-      platformFee,
+      platformFee:platformFee,
     });
 
     const qrCodeDataUrl = await QRCode.toDataURL(booking._id.toString());
@@ -278,7 +280,7 @@ exports.EventcapturePayment = async (req, res) => {
     }
 
     await stripe.paymentIntents.capture(paymentIntent.id);
-    const platformFee = Math.round(paymentIntent.amount * 0.04);
+    const platformFee = Math.round(totalPrice * 0.04);
 
     const booking = await Booking.create({
       user: userId,
@@ -320,7 +322,7 @@ exports.EventcapturePayment = async (req, res) => {
       paymentStatus: "on-hold",
       refundStatus: "none",
       hostPayoutStatus: "pending",
-      platformFee,
+      platformFee:platformFee,
     });
   } catch (error) {
     res.status(500).json({ error: error.message });

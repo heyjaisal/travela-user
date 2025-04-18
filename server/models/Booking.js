@@ -14,6 +14,7 @@ const propertyBookingSchema = new mongoose.Schema({
   hostPayoutStatus: { type: String, enum: ['pending', 'completed'], default: 'pending' },
   transactionId: { type: String, required: true },
   qrCode: { type: String },
+  Nights: { type: Number, default:1},
   platformFee: { type: Number, default: 4 },
   adminFeePercentage: { type: Number, default: 4 },
   isCheckedIn: { type: Boolean, default: false },

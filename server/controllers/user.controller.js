@@ -56,29 +56,33 @@ exports.getUserBlogs = async (req, res) => {
 
   exports.userDetails = async (req, res) => {
     try {
-        const { id } = req.params;
-        const { type } = req.query;
-
-        const isHost = type === "host";
-        const Model = isHost ? Host : User;
-        const fields = isHost
-            ? "image firstName lastName username country email country gender followers"
-            : "image firstName lastName username followers country gender email";
-
-        const user = await Model.findById(id).select(fields).lean();
-
-        if (!user) return res.status(404).json({ message: "User  not found" });
-
-        if (!isHost) {
-            user.followerCount = Array.isArray(user.followers) ? user.followers.length : 0;
-        }
-
-        res.json({ user });
+      const { id } = req.params;
+      const { type } = req.query;
+  
+      const isHost = type === "host";
+      const Model = isHost ? Host : User;
+      const fields = isHost
+        ? "image firstName lastName username country email gender followers"
+        : "image firstName lastName username followers country gender email";
+  
+      const user = await Model.findById(id).select(fields).lean();
+  
+      if (!user) return res.status(404).json({ message: "User not found" });
+  
+      const loggedInUserId = req.userId;
+  
+      if (!isHost) {
+        user.followerCount = Array.isArray(user.followers) ? user.followers.length : 0;
+        user.isFollowing = user.followers.includes(loggedInUserId);
+      }
+  
+      res.json({ user });
     } catch (error) {
-        res.status(500).json({ message: "Internal Server Error" });
-        console.log(error);
+      res.status(500).json({ message: "Internal Server Error" });
+      console.log(error);
     }
-};
+  };
+  
 
 exports.SaveItem = async (req, res) => {
   try {
@@ -119,3 +123,82 @@ exports.SaveItem = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+exports.followToggle = async (req, res) => {
+  const currentUserId = req.userId;
+  const targetUserId = req.params.id;
+
+  if (currentUserId.toString() === targetUserId) {
+    return res.status(400).json({ message: "You can't follow yourself" });
+  }
+
+  try {
+    const targetUser = await User.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!targetUser || !currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isFollowing = currentUser.following.includes(targetUserId);
+
+    if (isFollowing) {
+      currentUser.following.pull(targetUserId);
+      targetUser.followers.pull(currentUserId);
+    } else {
+      currentUser.following.push(targetUserId);
+      targetUser.followers.push(currentUserId);
+    }
+
+    await currentUser.save();
+    await targetUser.save();
+
+    res.status(200).json({
+      isFollowing: !isFollowing,
+      followerCount: targetUser.followers.length,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+exports.Hostfollow = async (req,res) => {
+  const currentUserId = req.userId;
+  const targetUserId = req.params.id;
+
+  if (currentUserId.toString() === targetUserId) {
+    return res.status(400).json({ message: "You can't follow yourself" });
+  }
+  
+
+  try {
+    const targetUser = await Host.findById(targetUserId);
+    const currentUser = await User.findById(currentUserId);
+
+    if (!targetUser || !currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const isFollowing = currentUser.following.includes(targetUserId);
+
+    if (isFollowing) {
+      currentUser.following.pull(targetUserId);
+      targetUser.followers.pull(currentUserId);
+    } else {
+      currentUser.following.push(targetUserId);
+      targetUser.followers.push(currentUserId);
+    }
+
+    await currentUser.save();
+    await targetUser.save();
+
+    res.status(200).json({
+      isFollowing: !isFollowing,
+      followerCount: targetUser.followers.length,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Internal server error" });
+  }
+}

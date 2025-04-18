@@ -28,8 +28,9 @@ function Eventpage() {
           params: { type: "event" },
           withCredentials: true,
         });
-        setEvent(data.item || {});
-        setAvailableTickets(data.item?.maxGuests || 0);
+        const eventData = data.item || {};
+        setEvent(eventData);
+        setAvailableTickets(eventData.maxGuests || 0);
       } catch (error) {
         console.error("Error fetching event:", error);
         toast.error("Failed to load event details");
@@ -59,15 +60,15 @@ function Eventpage() {
 
       const response = await axiosInstance.post("/checkout/event", {
         eventId: id,
-        title: event.title,
-        location: `${event.city}, ${event.state}, ${event.country}`,
+        title: event.title || "",
+        location: `${event.city || ""}, ${event.state || ""}, ${event.country || ""}`,
         image: event.images?.[0] || "",
-        hostId: event.host?._id,
-        date: event.eventDateTime,
+        hostId: event.host._id,
+        date: event.eventDateTime || "",
         ticketCount,
-        ticketPrice: event.ticketPrice,
-        hostName: `${event.host?.firstName} ${event.host?.lastName}`,
-        hostStripeAccount: event.host?.stripeAccountId,
+        ticketPrice: event.ticketPrice || 0,
+        hostName: `${event.host.firstName || ""} ${event.host.lastName || ""}`,
+        hostStripeAccount: event.host.stripeAccountId || "",
       });
 
       if (response.data.checkoutUrl) {
@@ -95,7 +96,7 @@ function Eventpage() {
       <div className="max-w-6xl mx-auto p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white shadow-lg p-6 rounded-lg border order-1 md:order-2 md:sticky md:top-20 self-start">
           <h2 className="text-xl font-bold">
-            ₹{event?.ticketPrice || "N/A"}
+            ₹{event?.ticketPrice || 0}
             <span className="text-sm font-normal">/Ticket</span>
           </h2>
           <p className="text-gray-600">Available Tickets: {availableTickets}</p>
@@ -110,20 +111,19 @@ function Eventpage() {
             placeholder="Enter the amount"
           />
           <p className="text-lg font-semibold mt-2">
-            Total: ₹
-            {event?.ticketPrice ? event.ticketPrice * ticketCount : "N/A"}
+            Total: ₹{event?.ticketPrice ? event.ticketPrice * ticketCount : 0}
           </p>
           <p className="text-sm text-gray-500 mt-1">
             Platform fee: ₹
             {event?.ticketPrice
               ? Math.round(event.ticketPrice * ticketCount * 0.04 * 100) / 100
-              : "N/A"}
+              : 0}
           </p>
           <p className="text-lg font-semibold mt-2">
             Grand Total: ₹
             {event?.ticketPrice
               ? Math.round(event.ticketPrice * ticketCount * 1.04 * 100) / 100
-              : "N/A"}
+              : 0}
           </p>
 
           <button
@@ -156,7 +156,7 @@ function Eventpage() {
           </p>
           <div className="border-t pt-4 flex items-center gap-3">
             <Link
-              to={`/host/${event?.host?._id}`}
+              to={`/host/${event?.host?._id || ""}`}
               className="flex items-center gap-3 mb-4 cursor-pointer"
             >
               <Avatar>
@@ -172,7 +172,7 @@ function Eventpage() {
                 </h3>
                 <p className="text-sm text-gray-500">
                   3 years hosting{" "}
-                  {event?.host?.profileSetup && "· Verified Host"}
+                  {event?.host?.profileSetup ? "· Verified Host" : ""}
                 </p>
               </div>
             </Link>
@@ -183,22 +183,23 @@ function Eventpage() {
           </p>
           <h3 className="text-lg font-semibold mb-2">About this place</h3>
           <ul className="space-y-1 text-gray-700 text-sm">
-            {event?.features && event?.features?.length > 0 ? (
-              event?.features.map((feature) => (
-                <ul key={feature._id}>{feature.text}</ul>
+            {event?.features && event?.features.length > 0 ? (
+              event.features.map((feature) => (
+                <li key={feature._id || feature.text}>{feature.text}</li>
               ))
             ) : (
               <li>No features listed</li>
             )}
           </ul>
           <h3 className="text-xl font-bold">Where you'll be</h3>
-          {/* <p>
-            {event.street}, {event.city}, {event.state}, {event.country}
-          </p> */}
-          {/* <MapWithDirectionButton
-            lat={event.location?.lat}
-            lng={event.location?.lng}
-          /> */}
+          <p>
+            {event?.street || "N/A"}, {event?.city || "N/A"},{" "}
+            {event?.state || "N/A"}, {event?.country || "N/A"}
+          </p>
+          <MapWithDirectionButton
+            lat={event?.location?.lat || 0}
+            lng={event?.location?.lng || 0}
+          />
         </div>
       </div>
 

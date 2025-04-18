@@ -22,7 +22,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { SquarePen } from "lucide-react";
+import { Plus, SquarePen } from "lucide-react";
 import ProfileDialog from "@/app/profile";
 import logo from "../assets/logo.png";
 import axiosInstance from "@/utils/axios-instance";
@@ -84,7 +84,7 @@ export default function NavbarComponent() {
         {userinfo ? (
           <>
             <Link href="/post">
-              <SquarePen className="w-6 h-6 text-gray-600" />
+              <Plus className="w-7 h-8 text-gray-600" />
             </Link>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -112,11 +112,11 @@ export default function NavbarComponent() {
           </>
         ) : (
           <>
-            <NavbarItem className="hidden lg:flex">
+            <NavbarItem className="hidden lg:flex cursor-pointer">
               <Link onClick={() => navigate("/login")}>Login</Link>
             </NavbarItem>
             <NavbarItem>
-              <Button variant="flat" className="bg-slate-200 text-black" onClick={() => navigate("/signup")}>
+              <Button variant="flat" className="bg-slate-200 text-black cursor-pointer" onClick={() => navigate("/signup")}>
                 Sign Up
               </Button>
             </NavbarItem>
