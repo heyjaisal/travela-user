@@ -9,7 +9,8 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useSelector } from "react-redux";
 import { ToastContainer, toast } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { motion } from "framer-motion";
+import { Textarea } from "@/components/ui/textarea";
 
 function Eventpage() {
   const { id } = useParams();
@@ -20,6 +21,11 @@ function Eventpage() {
   const [availableTickets, setAvailableTickets] = useState(0);
   const userInfo = useSelector((state) => state.auth.userInfo);
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  const [reviews, setReviews] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [newRating, setNewRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
     const fetchEvent = async () => {
@@ -36,8 +42,21 @@ function Eventpage() {
         toast.error("Failed to load event details");
       }
     };
+    const fetchReviews = async () => {
+      try {
+        const { data } = await axiosInstance.get(`user/reviews/Event/${id}`,{
+          withCredentials: true,
+        });
+        setReviews(data.reviews || []);
+      } catch (error) {
+        console.error("Error fetching reviews:", error);
+      }
+    };
 
-    if (id) fetchEvent();
+    if (id) {
+      fetchEvent();
+      fetchReviews();
+    }
   }, [id]);
 
   const handleReserve = async () => {
@@ -81,6 +100,28 @@ function Eventpage() {
       console.error("Error creating checkout session:", error);
       toast.error(error.message || "Failed to create checkout session");
       setLoading(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!userInfo) return setShowLoginModal(true);
+    if (!newRating || !newComment.trim())
+      return toast.error("Please provide rating and comment.");
+
+    try {
+      await axiosInstance.post(`user/reviews/Event/${id}`, {
+        rating: newRating,
+        comment: newComment,
+      },{
+        withCredentials: true,
+      });
+      setNewComment("");
+      setNewRating(0);
+      const { data } = await axiosInstance.get(`user/reviews/Event/${id}`);
+      setReviews(data.reviews);
+    } catch (err) {
+      console.error("Review submit error:", err);
+      toast.error("Could not submit review.");
     }
   };
 
@@ -200,6 +241,68 @@ function Eventpage() {
             lat={event?.location?.lat || 0}
             lng={event?.location?.lng || 0}
           />
+          <div className="max-w-6xl mx-auto px-4 mt-12 space-y-6">
+            <h2 className="text-2xl font-bold">Reviews</h2>
+            <div className="mt-8 p-6 bg-white border rounded-lg shadow space-y-4">
+              <h3 className="text-xl font-semibold">Leave a Review</h3>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <motion.span
+                    key={star}
+                    onClick={() => setNewRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    whileHover={{ scale: 1.2 }}
+                    className={`cursor-pointer text-2xl ${(hoverRating || newRating) >= star ? "text-yellow-500" : "text-gray-400"}`}
+                  >
+                    ★
+                  </motion.span>
+                ))}
+              </div>
+              <Textarea
+                placeholder="Write your review..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+              />
+              <Button
+                onClick={handleSubmitReview}
+                className="bg-button text-white"
+              >
+                Submit Review
+              </Button>
+            </div>
+            {reviews.length === 0 && (
+              <p className="text-gray-600">No reviews yet.</p>
+            )}
+            <div className="space-y-4">
+              {reviews.map((review) => (
+                <div
+                  key={review._id}
+                  className="p-4 bg-white rounded-lg shadow"
+                >
+                  <div className="flex items-center gap-3 mb-2">
+                    <Avatar className="w-10 h-10">
+                      <AvatarImage src={review.user?.image || ""} />
+                      <AvatarFallback>
+                        {review.user?.username?.charAt(0).toUpperCase() || "?"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="font-semibold">
+                        {review.user?.username || "User"}
+                      </p>
+                      <div className="flex gap-1 text-yellow-500">
+                        {[...Array(5)].map((_, i) => (
+                          <span key={i}>{i < review.rating ? "★" : "☆"}</span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  <p className="text-gray-700">{review.comment}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 

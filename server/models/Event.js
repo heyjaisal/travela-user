@@ -29,8 +29,9 @@ const eventSchema = new mongoose.Schema({
   saves: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   host: { type: mongoose.Schema.Types.ObjectId, ref: 'Host', required: true },
   status: { type: String, enum: ['pending', 'verified', 'canceled'], default: 'pending' },
+  averageRating: { type: Number, default: 0 },
+  reviewCount: { type: Number, default: 0 },
 }, { timestamps: true });
 
 const Events = mongoose.model('Event', eventSchema);
-
 module.exports = Events;

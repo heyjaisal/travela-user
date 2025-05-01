@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 import { useSelector } from "react-redux";
 import axiosInstance from "../utils/axios-instance";
 import { useNavigate } from "react-router-dom";
 
-const PropertyCard = ({ images, propertyType, price, country, city, _id, isSaved }) => {
+const PropertyCard = ({ images, propertyType, price, country, city, _id,averageRating, isSaved }) => {
   const [Saved, setIsSaved] = useState(isSaved);
   const navigate = useNavigate();
   const userInfo = useSelector((state) => state.auth.userInfo);
@@ -39,7 +37,10 @@ const PropertyCard = ({ images, propertyType, price, country, city, _id, isSaved
   };
 
   return (
-    <div className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg cursor-pointer" onClick={handleClick}>
+    <div
+      className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg cursor-pointer"
+      onClick={handleClick}
+    >
       {userInfo && (
         <button onClick={handleSave} className="absolute top-3 right-2 p-2 z-10">
           <motion.svg
@@ -61,25 +62,53 @@ const PropertyCard = ({ images, propertyType, price, country, city, _id, isSaved
           </motion.svg>
         </button>
       )}
-      <Slider {...settings} className="rounded-xl overflow-hidden">
-        {images.map((img, index) => (
-          <div key={index}>
-            <img
-              src={img}
-              alt={`Property ${index + 1}`}
-              className="w-full h-72 object-cover rounded-xl"
-            />
-          </div>
-        ))}
-      </Slider>
+
+      <div className="overflow-hidden">
+        {images.length > 1 ? (
+          <Slider {...settings} className="rounded-xl">
+            {images.map((img, index) => (
+              <div key={index}>
+                <img
+                  src={img}
+                  alt={`Property ${index + 1}`}
+                  className="w-full h-72 object-cover rounded-xl"
+                />
+              </div>
+            ))}
+          </Slider>
+        ) : (
+          <img
+            src={images[0]}
+            alt="Property"
+            className="w-full h-72 object-cover rounded-xl"
+          />
+        )}
+      </div>
+
       <div className="mt-2 px-1">
         <h3 className="text-lg font-semibold truncate">{propertyType}</h3>
-        <p className="text-gray-500 text-sm truncate">{city}, {country}</p>
+        <p className="text-gray-500 text-sm truncate">
+          {city}, {country}
+        </p>
         <div className="flex justify-between items-center mt-1 relative">
           <span className="text-lg font-bold">
             ₹{price}/<span className="text-red-200 font-thin">night</span>
           </span>
         </div>
+        {typeof averageRating === "number" && (
+        <div className="absolute bottom-14 right-2 flex bg-white px-2 py-1 rounded-full">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="gold"
+            viewBox="0 0 24 24"
+            stroke="gold"
+            className="w-4 h-4 mr-1"
+          >
+            <path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.782 1.401 8.168L12 18.896l-7.335 3.863 1.401-8.168L.132 9.209l8.2-1.191z" />
+          </svg>
+          <span className="text-sm font-medium text-gray-700">{averageRating.toFixed(1)}</span>
+        </div>
+      )}
       </div>
     </div>
   );

@@ -83,7 +83,7 @@ exports.getListings = async (req, res) => {
       totalListings = await Property.countDocuments(filter);
       const Propertys = await Property.find(filter)
         .sort({ createdAt: -1 })
-        .select("propertyType images price country city saves")
+        .select("propertyType averageRating images price country city saves")
         .skip(skip)
         .limit(Number(limit))
         .lean();
@@ -99,7 +99,7 @@ exports.getListings = async (req, res) => {
       totalListings = await Events.countDocuments(filter);
       const events = await Events.find(filter)
         .sort({ createdAt: -1 })
-        .select("title images eventVenue country ticketPrice city saves")
+        .select("title images averageRating eventVenue country ticketPrice city saves")
         .skip(skip)
         .limit(Number(limit))
         .lean();

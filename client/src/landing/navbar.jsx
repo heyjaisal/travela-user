@@ -101,7 +101,6 @@ export default function NavbarComponent() {
                 <DropdownMenuItem onClick={() => navigate("/messages")}>Messages</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => navigate("/saved")}>Saved</DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {/* Profile Dialog Trigger */}
                 <ProfileDialog />
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="text-red-600" onClick={logOut}>

@@ -10,9 +10,9 @@ const MapWithDirectionButton = ({ lat, lng }) => {
   };
 
   return (
-    <div className="relative w-full h-[400px]">
+    <div className="relative w-full h-[400px] z-10">
       <MapContainer center={[lat, lng]} zoom={13} className="w-full h-full">
-        {/* Satellite View */}
+      
         <TileLayer url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}" />
         <Marker position={[lat, lng]}>
           <Popup>

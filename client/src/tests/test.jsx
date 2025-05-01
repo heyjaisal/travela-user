@@ -1,206 +1,156 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from "../utils/axios-instance";
-import BlogCard from "../users/blog-card";
+import React, { useState } from "react";
+import { motion } from "framer-motion";
+import Slider from "react-slick";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import InfiniteScroll from "react-infinite-scroll-component";
-import { ScaleLoader } from "react-spinners";
-import { Avatar, AvatarImage } from "@/components/ui/avatar";
+import axiosInstance from "@/utils/axios-instance";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  useDisclosure,
+} from "@heroui/react";
 
-const Userprofile = () => {
-  const { id } = useParams();
-  const [user, setUser] = useState(null);
-  const [blogs, setBlogs] = useState([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
-  const [activeTab, setActiveTab] = useState("post");
+const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSaved }) => {
+  const [Saved, setIsSaved] = useState(isSaved);
   const userInfo = useSelector((state) => state.auth.userInfo);
-  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const navigate = useNavigate();
 
-  const navigate = useNavigate()
-
-  const isLoading = useRef(false);
-  const [isFollowing, setIsFollowing] = useState(false);
-
-  useEffect(() => {
-    const fetchUserDetails = async () => {
-      try {
-        const response = await axiosInstance.get(`/user/${id}`, {
-          params: { type: "user" },
-          withCredentials: true,
-        });
-        setUser(response.data.user);
-        setIsFollowing(response.data.user.isFollowing);
-      } catch (error) {
-        console.error("Error fetching user details:", error);
-      }
-    };
-    fetchUserDetails();
-  }, [id]);
-
-  const fetchUserBlogs = async () => {
-    if (isLoading.current) return;
-    isLoading.current = true;
-
+  const handleSave = async (e) => {
+    e.stopPropagation();
     try {
-      const { data } = await axiosInstance.get(`/user/${id}/blogs`, {
-        withCredentials: true,
-        params: { page, limit: 2 },
-      });
-
-      setBlogs((prev) => [
-        ...prev,
-        ...data.blogs.filter(
-          (newItem) => !prev.some((item) => item._id === newItem._id)
-        ),
-      ]);
-      setHasMore(data.blogs.length > 0);
-      setPage((prev) => prev + 1);
-    } catch (error) {
-      console.error("Error fetching user blogs:", error);
-    } finally {
-      isLoading.current = false;
-    }
-  };
-
-  useEffect(() => {
-    fetchUserBlogs();
-  }, [id]);
-
-  const handleFollowToggle = async () => {
-    if (!userInfo) {
-      setShowLoginModal(true);
-      return;
-    }
-    try {
-      const { data } = await axiosInstance.post(
-        `/user/${id}/follow-toggle`,
-        {},
+      const response = await axiosInstance.post(
+        `/user/save/${_id}`,
+        { type: "event" },
         { withCredentials: true }
       );
-      setIsFollowing(data.isFollowing);
-      setUser((prev) => ({
-        ...prev,
-        followerCount: data.followerCount,
-      }));
+      setIsSaved(response.data.isSaved);
     } catch (error) {
-      console.error("Error toggling follow state:", error);
+      console.error("Error saving event:", error.response?.data || error.message);
     }
   };
 
-  const handleGoogleSignup = () => {
-    window.location.href = "http://localhost:5000/auth/google";
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
   };
 
-  if (!user) return <div className="text-center mt-10">Loading...</div>;
+  const handleClick = () => {
+    navigate(`/event/${_id}`);
+  };
 
-  const UserInfo = () => (
-    <>
-      <div className="text-center">
-        <Avatar className="w-12 h-12 rounded-full overflow-hidden mx-auto">
-          {user.image ? (
-            <AvatarImage
-              src={user.image}
-              alt="profile"
-              className="object-cover w-full h-full"
+  return (
+    <div
+      className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg cursor-pointer"
+      onClick={handleClick}
+    >
+      {/* 3-dot dropdown (left top) */}
+      <div className="absolute bottom-2 right-2 z-10">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <button className="p-1">
+              <MoreHorizontal className="w-5 h-5 text-gray-600" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+              Report
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+              Share
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
+
+      {/* Heart save button (right top) */}
+      {userInfo && (
+        <button onClick={handleSave} className="absolute top-2 right-2 p-2 z-10">
+          <motion.svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            stroke="grey"
+            strokeWidth="2"
+            className="w-6 h-6"
+            animate={{ scale: Saved ? 1.2 : 1 }}
+            transition={{ type: "spring", stiffness: 300, damping: 10 }}
+          >
+            <motion.path
+              fill={Saved ? "red" : "white"}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1"
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
             />
-          ) : (
-            <div className="w-12 h-12 bg-gray-300 flex items-center justify-center text-white text-lg font-bold rounded-full">
-              {user.firstName?.charAt(0).toUpperCase() ||
-                user.email?.charAt(0).toUpperCase()}
-            </div>
-          )}
-        </Avatar>
-        <h3 className="text-lg font-semibold mt-2">
-          {user.firstName} {user.lastName}
-        </h3>
-        <p className="text-gray-500 text-sm">{user.country}</p>
-        <p className="text-gray-500 text-sm">{user.email}</p>
-        <p className="text-gray-500 text-sm">{user.gender}</p>
-        <p className="text-black text-lg">{user.followerCount} followers</p>
-        <div className="flex justify-center gap-2 mt-4">
-          <button
-            onClick={handleFollowToggle}
-            className="bg-blue-500 text-white py-2 px-4 rounded-lg"
-          >
-            {isFollowing ? "Unfollow" : "Follow"}
-          </button>
-          <button className="border py-2 px-4 rounded-lg">Message</button>
-        </div>
-      </div>
-      ); return (
-      <div className="flex flex-col md:flex-row p-4 max-w-6xl mx-auto">
-        <div className="w-full md:w-2/3 p-4 h-screen overflow-y-scroll scrollbar-hide">
-          <h2 className="text-2xl font-bold mb-5 text-center">
-            {user.firstName} {user.lastName}
-          </h2>
+          </motion.svg>
+        </button>
+      )}
 
-          <div className="flex gap-4 border-b mt-2 md:hidden mb-5">
-            <button
-              className={`py-2 px-4 ${activeTab === "post" ? "border-b-2 border-blue-500" : ""}`}
-              onClick={() => setActiveTab("post")}
-            >
-              Posts
-            </button>
-            <button
-              className={`py-2 px-4 ${activeTab === "about" ? "border-b-2 border-blue-500" : ""}`}
-              onClick={() => setActiveTab("about")}
-            >
-              About
-            </button>
+      {/* Image slider */}
+      <Slider {...settings} className="rounded-xl overflow-hidden">
+        {images.map((img, index) => (
+          <div key={index}>
+            <img src={img} alt={`Event ${index + 1}`} className="w-full h-72 object-cover rounded-xl" />
           </div>
+        ))}
+      </Slider>
 
-          {activeTab === "post" ? (
-            <InfiniteScroll
-              dataLength={blogs.length}
-              next={fetchUserBlogs}
-              hasMore={hasMore}
-              loader={
-                <div className="flex justify-center">
-                  <ScaleLoader color="#C0C2C9" />
-                </div>
-              }
-              endMessage={
-                <div className="text-center text-gray-500 py-4">
-                  No more posts
-                </div>
-              }
-            >
-              {blogs.length > 0 ? (
-                blogs.map((blog) => <BlogCard key={blog._id} blog={blog} />)
-              ) : (
-                <p className="text-gray-500 mt-4">No posts available.</p>
-              )}
-            </InfiniteScroll>
-          ) : (
-            <div className="text-center p-4 border rounded-lg mt-4 md:hidden">
-              <UserInfo />
-            </div>
-          )}
-        </div>
-
-        <div className="hidden md:block w-1/3 p-4 border-l sticky top-0 h-screen">
-          <UserInfo />
-        </div>
+      {/* Event info */}
+      <div className="mt-2 px-1">
+        <h3 className="text-lg font-semibold truncate">{eventVenue}</h3>
+        <p className="text-gray-500 text-sm truncate">
+          {city}, {country}
+        </p>
+        <span className="text-lg font-bold">
+          ₹{ticketPrice}/<span className="text-red-200 font-thin">ticket</span>
+        </span>
       </div>
-      <Dialog open={showLoginModal} onOpenChange={setShowLoginModal}>
-        <DialogContent className="p-6 text-center space-y-4">
-          <h2 className="text-xl font-semibold">Login Required to follow anyone</h2>
-          <p className="text-gray-600">
-            Please log in with Google to reserve this property.
-          </p>
-          <Button
-            onClick={handleGoogleSignup}
-            className="w-full bg-button text-white"
-          >
-            Continue with Google
-          </Button>
-        </DialogContent>
-      </Dialog>
-    </>
+
+      {/* Modal for Report */}
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader className="flex flex-col gap-1">Report Event</ModalHeader>
+              <ModalBody>
+                <p>Are you sure you want to report this event?</p>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  onPress={() => {
+                    onClose();
+                    console.log("Reported!");
+                  }}
+                >
+                  Confirm
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
+    </div>
   );
 };
 
-export default Userprofile;
+export default EventCard;

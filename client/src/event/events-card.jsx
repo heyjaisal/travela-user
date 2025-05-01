@@ -1,19 +1,53 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Slider from "react-slick";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 import axiosInstance from "@/utils/axios-instance";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  useDisclosure,
+  Checkbox,
+} from "@heroui/react";
 
-const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSaved }) => {
+const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSaved, averageRating }) => {
   const [Saved, setIsSaved] = useState(isSaved);
   const userInfo = useSelector((state) => state.auth.userInfo);
-  
+  const { isOpen, onOpen, onOpenChange } = useDisclosure();
+  const navigate = useNavigate();
+  const [selectedReasons, setSelectedReasons] = useState([]);
+  const [customReason, setCustomReason] = useState("");
+
+  const reasons = [
+    "Inappropriate content",
+    "Scam or misleading",
+    "Hate speech",
+    "Violence",
+    "Spam",
+    "Other",
+  ];
+
+  const handleCheckboxChange = (reason) => {
+    setSelectedReasons((prev) =>
+      prev.includes(reason) ? prev.filter((r) => r !== reason) : [...prev, reason]
+    );
+  };
+
   const handleSave = async (e) => {
     e.stopPropagation();
-    try {stripeAccountId
+    try {
       const response = await axiosInstance.post(
         `/user/save/${_id}`,
         { type: "event" },
@@ -25,17 +59,63 @@ const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSave
     }
   };
 
-  const navigate = useNavigate();
-  const settings = { dots: true, infinite: true, speed: 500, slidesToShow: 1, slidesToScroll: 1 };
-
   const handleClick = () => {
     navigate(`/event/${_id}`);
   };
 
+  const handleReportConfirm = async () => {
+    const finalReasons = selectedReasons.includes("Other")
+      ? [...selectedReasons.filter((r) => r !== "Other"), customReason.trim()]
+      : [...selectedReasons];
+
+    console.log("Reported reasons:", finalReasons);
+
+    try {
+      await axiosInstance.post(`/report/event/${_id}`, {
+        reasons: finalReasons,
+      });
+    } catch (err) {
+      console.error("Report error:", err.response?.data || err.message);
+    }
+
+    onOpenChange(false);
+  };
+
+  const settings = {
+    dots: true,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 1,
+    slidesToScroll: 1,
+  };
+
   return (
-    <div className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg cursor-pointer" onClick={handleClick}>
+    <div
+      className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg cursor-pointer"
+      onClick={handleClick}
+    >
       {userInfo && (
-        <button onClick={handleSave} className="absolute top-3 right-2 p-2 z-10">
+        <div className="absolute bottom-2 right-2 z-10">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-1">
+                <MoreHorizontal className="w-5 h-5 text-gray-600" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+                Report
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
+                Share
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      )}
+
+      {userInfo && (
+        <button onClick={handleSave} className="absolute top-2 right-2 p-2 z-10">
           <motion.svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 24 24"
@@ -56,19 +136,99 @@ const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSave
         </button>
       )}
 
-      <Slider {...settings} className="rounded-xl overflow-hidden">
-        {images.map((img, index) => (
-          <div key={index}>
-            <img src={img} alt={`Event ${index + 1}`} className="w-full h-72 object-cover rounded-xl" />
-          </div>
-        ))}
-      </Slider>
+<div className="overflow-hidden">
+        {images.length > 1 ? (
+          <Slider {...settings} className="rounded-xl">
+            {images.map((img, index) => (
+              <div key={index}>
+                <img
+                  src={img}
+                  alt={`Property ${index + 1}`}
+                  className="w-full h-72 object-cover rounded-xl"
+                />
+              </div>
+            ))}
+          </Slider>
+        ) : (
+          <img
+            src={images[0]}
+            alt="Property"
+            className="w-full h-72 object-cover rounded-xl"
+          />
+        )}
+      </div>
 
       <div className="mt-2 px-1">
         <h3 className="text-lg font-semibold truncate">{eventVenue}</h3>
-        <p className="text-gray-500 text-sm truncate">{city}, {country}</p>
-        <span className="text-lg font-bold">₹{ticketPrice}/<span className="text-red-200 font-thin">ticket</span></span>
+        <p className="text-gray-500 text-sm truncate">
+          {city}, {country}
+        </p>
+        <span className="text-lg font-bold">
+          ₹{ticketPrice}/<span className="text-red-200 font-thin">ticket</span>
+        </span>
       </div>
+
+      {typeof averageRating === "number" && (
+        <div className="absolute bottom-14 right-2 flex bg-white px-2 py-1 rounded-full">
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="gold"
+            viewBox="0 0 24 24"
+            stroke="gold"
+            className="w-4 h-4 mr-1"
+          >
+            <path d="M12 .587l3.668 7.431 8.2 1.191-5.934 5.782 1.401 8.168L12 18.896l-7.335 3.863 1.401-8.168L.132 9.209l8.2-1.191z" />
+          </svg>
+          <span className="text-sm font-medium text-gray-700">{averageRating.toFixed(1)}</span>
+        </div>
+      )}
+
+      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+        <ModalContent>
+          {(onClose) => (
+            <>
+              <ModalHeader>Report Event</ModalHeader>
+              <ModalBody>
+                <div className="flex flex-wrap gap-4">
+                  {reasons.map((reason) => (
+                    <Checkbox
+                      key={reason}
+                      isSelected={selectedReasons.includes(reason)}
+                      onValueChange={() => handleCheckboxChange(reason)}
+                    >
+                      {reason}
+                    </Checkbox>
+                  ))}
+                  {selectedReasons.includes("Other") && (
+                    <textarea
+                      placeholder="Please describe your reason"
+                      className="w-full p-2 border rounded-md mt-2"
+                      rows={3}
+                      value={customReason}
+                      onChange={(e) => setCustomReason(e.target.value)}
+                    />
+                  )}
+                </div>
+              </ModalBody>
+              <ModalFooter>
+                <Button color="danger" variant="light" onPress={onClose}>
+                  Cancel
+                </Button>
+                <Button
+                  color="primary"
+                  onPress={handleReportConfirm}
+                  isDisabled={
+                    selectedReasons.length === 0 ||
+                    (selectedReasons.includes("Other") && !customReason.trim())
+                  }
+                >
+                  Confirm
+                </Button>
+              </ModalFooter>
+            </>
+          )}
+        </ModalContent>
+      </Modal>
     </div>
   );
 };

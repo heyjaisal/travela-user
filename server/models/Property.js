@@ -2,20 +2,16 @@ const mongoose = require("mongoose");
 
 const propertySchema = new mongoose.Schema(
   {
-    propertyType: {
-      type: String,
-      enum: ["apartment", "house", "studio", "villa", "other"],
-      required: true,
-    },
+    propertyType: { type: String, required: true,},
     title: { type: String, required: true, trim: true },
     size: { type: Number, required: true },
     price: { type: Number, required: true, min: 0 },
     description: { type: String, required: true, trim: true },
     bedrooms: { type: Number, required: true, min: 1 },
-    kitchen: { type: Number, required: true, min: 1 },
-    bathrooms: { type: Number, required: true, min: 1 },
-    maxGuests: { type: Number, required: true, min: 1 },
-    maxStay: { type: Number, required: true, min: 1 },
+    kitchen: { type: Number, required: true, min: 0},
+    bathrooms: { type: Number, required: true, min: 0},
+    maxGuests: { type: Number, required: true, min: 0 },
+    maxStay: { type: Number, required: true, min: 0 },
     location: {
       lat: { type: Number, required: true },
       lng: { type: Number, required: true },
@@ -34,6 +30,8 @@ const propertySchema = new mongoose.Schema(
       enum: ["pending", "verified", "canceled"],
       default: "pending",
     },
+    averageRating: { type: Number, default: 0 },
+    reviewCount: { type: Number, default: 0 },
   },
   { timestamps: true }
 );

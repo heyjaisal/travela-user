@@ -8,8 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
+
 
 const EventCard = ({ event }) => {
   const userInfo = useSelector((state) => state.auth.userInfo);

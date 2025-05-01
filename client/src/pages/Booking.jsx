@@ -1,25 +1,30 @@
 import React,{useState} from 'react'
-import PropertyList from './Payment';
 import Eventlist from '@/event/event-list';
 import Propertylist from '@/property/property-list';
 
 function Approval() {
   const [activeTab, setActiveTab] = useState("property");
   return (
-    <div>
-      <div className='flex justify-between items-ceter mb-2'>
-        <h1 className='text-xl pl-3.5 pt-5 font-bold font-sans'>Book you adventure</h1>
+    <div className="p-4 overflow-hidden">
 
+      <div className="flex space-x-4 justify-center p-6 rounded-lg">
+        <button
+          onClick={() => setActiveTab("property")}
+          className={`py-2 px-6 text-lg font-medium border-2 rounded-md transition-all duration-300 ${activeTab === "property" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-900 border-gray-400 hover:bg-gray-200"}`}
+        >
+          Properties
+        </button>
+        <button
+          onClick={() => setActiveTab("events")}
+          className={`py-2 px-6 text-lg font-medium border-2 rounded-md transition-all duration-300 ${activeTab === "events" ? "bg-gray-900 text-white border-gray-900" : "bg-white text-gray-900 border-gray-400 hover:bg-gray-200"}`}
+        >
+          Events
+        </button>
       </div>
-      <div className='flex border-b border-gray-300 mb-4'>
-        <button onClick={()=> setActiveTab("property")} className={`py-2 px-4 text-lg font-poppins border-b-4 ${activeTab === "property" ? "border-purple-600 text-purple-600" : "border-transparent text-gray-600"}`}> Property</button>
-        <button onClick={()=>setActiveTab("event")} className={`py-2 px-4 text-lg font-poppins border-b-4 ${activeTab === 'event' ? 'border-purple-600 text-purple-600':'border-transparent text-gray-600'}`}>Events</button>
 
+      <div className="overflow-x-auto scrollbar-hide"> 
+        {activeTab === "property" ? <Propertylist /> : <Eventlist />}
       </div>
-
-      {activeTab === 'property' ? <Propertylist/> : <Eventlist/>}
-
-      
     </div>
   )
 }
