@@ -45,7 +45,7 @@ function PropertyList() {
     <div className="mx-auto">
       <ToastContainer />
 
-      <div className="flex justify-center mb-4">
+      <div className="flex justify-center pt-1">
         <div className="relative w-1/2">
           <input
             type="text"

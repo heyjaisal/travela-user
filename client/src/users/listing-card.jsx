@@ -10,24 +10,33 @@ const ListingCard = ({ listing, type }) => {
     slidesToScroll: 1,
   };
 
-  const linkTo = type === "property" 
-    ? `/property/${listing._id}` 
-    : `/event/${listing._id}`;
+  const linkTo =
+    type === "property" ? `/property/${listing._id}` : `/event/${listing._id}`;
 
   return (
     <Link to={linkTo}>
       <div className="transition-transform duration-300 hover:scale-105 relative border p-2 rounded-lg">
-        <Slider {...settings} className="rounded-xl overflow-hidden">
-          {listing.images.map((img, index) => (
-            <div key={index}>
-              <img
-                src={img}
-                alt={`${type === "property" ? "Property" : "Event"} ${index + 1}`}
-                className="w-full h-72 object-cover rounded-xl"
-              />
-            </div>
-          ))}
-        </Slider>
+        <div className="overflow-hidden">
+          {listing.images.length > 1 ? (
+            <Slider {...settings} className="rounded-xl">
+              {listing.images.map((img, index) => (
+                <div key={index}>
+                  <img
+                    src={img}
+                    alt={`Property ${index + 1}`}
+                    className="w-full h-72 object-cover rounded-xl"
+                  />
+                </div>
+              ))}
+            </Slider>
+          ) : (
+            <img
+              src={listing.images[0]}
+              alt="Property"
+              className="w-full h-72 object-cover rounded-xl"
+            />
+          )}
+        </div>
 
         <div className="mt-2 px-1">
           <h3 className="text-lg font-semibold truncate">

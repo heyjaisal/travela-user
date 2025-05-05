@@ -43,8 +43,8 @@ function Eventlist() {
 
     return (
         <div>
-            <div className="flex justify-center">
-            <div className="relative w-1/2">
+            <div className="flex justify-center pt-1">
+            <div className="relative w-1/2 ">
             <input
                 type="text"
                 placeholder="Search events..."

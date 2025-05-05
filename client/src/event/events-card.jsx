@@ -22,13 +22,21 @@ import {
   Checkbox,
 } from "@heroui/react";
 
-const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSaved, averageRating }) => {
+const EventCard = ({
+  images,
+  eventVenue,
+  ticketPrice,
+  country,
+  city,
+  _id,
+  isSaved,
+  averageRating,
+}) => {
   const [Saved, setIsSaved] = useState(isSaved);
   const userInfo = useSelector((state) => state.auth.userInfo);
   const { isOpen, onOpen, onOpenChange } = useDisclosure();
   const navigate = useNavigate();
   const [selectedReasons, setSelectedReasons] = useState([]);
-  const [customReason, setCustomReason] = useState("");
 
   const reasons = [
     "Inappropriate content",
@@ -64,15 +72,11 @@ const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSave
   };
 
   const handleReportConfirm = async () => {
-    const finalReasons = selectedReasons.includes("Other")
-      ? [...selectedReasons.filter((r) => r !== "Other"), customReason.trim()]
-      : [...selectedReasons];
-
-    console.log("Reported reasons:", finalReasons);
+    console.log("Reported reasons:", selectedReasons);
 
     try {
-      await axiosInstance.post(`/report/event/${_id}`, {
-        reasons: finalReasons,
+      await axiosInstance.post(`/user/report/Event/${_id}`, {
+        reasons: selectedReasons,
       });
     } catch (err) {
       console.error("Report error:", err.response?.data || err.message);
@@ -103,7 +107,12 @@ const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSave
               </button>
             </DropdownMenuTrigger>
             <DropdownMenuContent>
-              <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onOpen(); }}>
+              <DropdownMenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onOpen();
+                }}
+              >
                 Report
               </DropdownMenuItem>
               <DropdownMenuItem onClick={(e) => e.stopPropagation()}>
@@ -136,7 +145,7 @@ const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSave
         </button>
       )}
 
-<div className="overflow-hidden">
+      <div className="overflow-hidden">
         {images.length > 1 ? (
           <Slider {...settings} className="rounded-xl">
             {images.map((img, index) => (
@@ -183,52 +192,42 @@ const EventCard = ({ images, eventVenue, ticketPrice, country, city, _id, isSave
         </div>
       )}
 
-      <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
-        <ModalContent>
-          {(onClose) => (
-            <>
-              <ModalHeader>Report Event</ModalHeader>
-              <ModalBody>
-                <div className="flex flex-wrap gap-4">
-                  {reasons.map((reason) => (
-                    <Checkbox
-                      key={reason}
-                      isSelected={selectedReasons.includes(reason)}
-                      onValueChange={() => handleCheckboxChange(reason)}
-                    >
-                      {reason}
-                    </Checkbox>
-                  ))}
-                  {selectedReasons.includes("Other") && (
-                    <textarea
-                      placeholder="Please describe your reason"
-                      className="w-full p-2 border rounded-md mt-2"
-                      rows={3}
-                      value={customReason}
-                      onChange={(e) => setCustomReason(e.target.value)}
-                    />
-                  )}
-                </div>
-              </ModalBody>
-              <ModalFooter>
-                <Button color="danger" variant="light" onPress={onClose}>
-                  Cancel
-                </Button>
-                <Button
-                  color="primary"
-                  onPress={handleReportConfirm}
-                  isDisabled={
-                    selectedReasons.length === 0 ||
-                    (selectedReasons.includes("Other") && !customReason.trim())
-                  }
-                >
-                  Confirm
-                </Button>
-              </ModalFooter>
-            </>
-          )}
-        </ModalContent>
-      </Modal>
+      <div className="fixed z-[9999]">
+        <Modal isOpen={isOpen} onOpenChange={onOpenChange}>
+          <ModalContent>
+            {(onClose) => (
+              <>
+                <ModalHeader>Report Event</ModalHeader>
+                <ModalBody>
+                  <div className="flex flex-wrap gap-4">
+                    {reasons.map((reason) => (
+                      <Checkbox
+                        key={reason}
+                        isSelected={selectedReasons.includes(reason)}
+                        onValueChange={() => handleCheckboxChange(reason)}
+                      >
+                        {reason}
+                      </Checkbox>
+                    ))}
+                  </div>
+                </ModalBody>
+                <ModalFooter>
+                  <Button color="danger" variant="light" onPress={onClose}>
+                    Cancel
+                  </Button>
+                  <Button
+                    color="primary"
+                    onPress={handleReportConfirm}
+                    isDisabled={selectedReasons.length === 0}
+                  >
+                    Confirm
+                  </Button>
+                </ModalFooter>
+              </>
+            )}
+          </ModalContent>
+        </Modal>
+      </div>
     </div>
   );
 };

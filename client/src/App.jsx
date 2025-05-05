@@ -5,8 +5,8 @@ import { ScaleLoader } from "react-spinners";
 import { setUserInfo } from "./redux/slice/auth";
 import Navbar from "./landing/navbar";
 import axiosInstance from "./utils/axios-instance";
-import Bookingsucces from "./event/booking-succes";
-import Boookingfail from "./event/boooking-fail";
+import Bookingsucces from "./components/booking-succes";
+import Boookingfail from "./components/boooking-fail";
 import Success from "./property/succes";
 
 const Landing = lazy(() => import("./landing/Landing"));
@@ -28,6 +28,7 @@ const HostProfile = lazy(() => import("./users/host-profile"));
 const EventPage = lazy(() => import("./event/event-page"));
 const PropertyPage = lazy(() => import("./property/property-page"));
 const AboutUs = lazy(() => import("./landing/about-us"));
+const Saved = lazy(() => import("./app/saved"));
 const Fallback = lazy(() => import("./components/fallback"));
 const ECheckout = lazy(() => import("./event/succes"));
 
@@ -97,6 +98,7 @@ const App = () => {
                   <Route path="/booked" element={<Booked />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/account" element={<Account />} />
+                  <Route path="/saved" element={<Saved />} />
                   <Route path="/event-success" element={<ECheckout />} />
                   <Route path="/property-success" element={<Success />} />
                   <Route

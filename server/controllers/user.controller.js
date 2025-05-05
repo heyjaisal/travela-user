@@ -5,6 +5,7 @@ const Property = require("../models/Property");
 const User = require("../models/User");
 const Review = require("../models/Review");
 const { default: mongoose } = require("mongoose");
+const Report = require("../models/Report");
 
 exports.searchUser = async (req, res) => {
   try {
@@ -276,3 +277,34 @@ exports.getReviews = async (req, res) => {
   }
 };
 
+
+exports.ReportContent = async (req, res) => {
+  try {
+    const { type, id } = req.params;
+    const { reasons } = req.body;
+
+    console.log(reasons);
+    
+
+    if (!["Event", "Property"].includes(type)) {
+      return res.status(400).json({ error: "Invalid report type" });
+    }
+
+    if (!reasons || reasons.length === 0) {
+      return res.status(400).json({ error: "Reasons are required" });
+    }
+
+    const report = new Report({
+      contentType: type,
+      contentId: id,
+      userId: req.userId,
+      reasons,
+    });
+
+    await report.save();
+    res.status(201).json({ message: "Report submitted successfully" });
+  } catch (err) {
+    console.error("Report Error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
