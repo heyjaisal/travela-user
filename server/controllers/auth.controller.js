@@ -9,7 +9,6 @@ require("dotenv").config();
 const generateOtp = () =>
   Math.floor(100000 + Math.random() * 900000).toString();
 
-
 exports.sendOtp = async (req, res) => {
   const { email, username } = req.body;
   
@@ -39,7 +38,6 @@ exports.sendOtp = async (req, res) => {
     res.status(500).json({ error: "Error sending OTP" });
   }
 };
-
 
 exports.verifyOtp = async (req, res) => {
   const { username, email, password, otp } = req.body;
@@ -85,8 +83,6 @@ exports.userlogin = async (req, res) => {
     }
 
     const user = await User.findOne({ email }).select('+password');
- 
-  
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -101,8 +97,13 @@ exports.userlogin = async (req, res) => {
       return res.status(401).json({ error: "The password is incorrect" });
     }
 
+    // Add role to the token payload
     const token = jwt.sign(
-      { email: user.email, userId: user._id },
+      { 
+        email: user.email, 
+        userId: user._id,
+        role: user.role || 'User'
+      },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
@@ -128,6 +129,7 @@ exports.userlogin = async (req, res) => {
         street: user.street,
         city: user.city,
         gender: user.gender,
+        role: user.role || 'User', // Optionally return role in response
       },
     });
   } catch (error) {
@@ -135,8 +137,6 @@ exports.userlogin = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
-
-
 
 exports.updateprofile = async (req, res) => {
   const { firstName, lastName, username, country, city } = req.body;

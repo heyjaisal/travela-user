@@ -18,6 +18,7 @@ const EventCard = ({ event }) => {
   const image = event?.hostId?.image || "";
 
   const {
+     _id,
     bookingStatus,
     isCheckedIn,
     paymentStatus,
@@ -28,7 +29,9 @@ const EventCard = ({ event }) => {
     transactionId,
   } = event;
 
-  const { images, eventVenue, ticketPrice, country, city, _id } = event.event;
+  const {  images, eventVenue, ticketPrice, country, city, } = event.event;
+  console.log("Event Card Data:", event.event._id);
+  
 
   const navigate = useNavigate();
 
@@ -78,9 +81,7 @@ const EventCard = ({ event }) => {
           <DialogTitle className="text-center text-lg font-bold mb-2">
             Event Summary
           </DialogTitle>
-          <DialogDescription className="mb-4 text-center">
-            Review your event booking details below.
-          </DialogDescription>
+          
 
           <p><strong>Event:</strong> {eventVenue}</p>
           <p><strong>Host:</strong> {username}</p>
@@ -91,14 +92,35 @@ const EventCard = ({ event }) => {
           <p><strong>Checked In:</strong> {isCheckedIn ? "Yes" : "No"}</p>
           <p><strong>Refund Status:</strong> {refundStatus || "N/A"}</p>
           {qrCode && (
-            <div className="flex justify-center mt-3">
-              <img
-                src={qrCode}
-                alt="QR Code"
-                className="w-32 h-32 rounded-lg border"
-              />
-            </div>
-          )}
+  <div className="flex flex-col items-center mt-3">
+    <img
+      src={qrCode}
+      alt="QR Code"
+      className="w-32 h-32 rounded-lg border mb-4"
+    />
+    <div className="flex gap-4">
+      <button
+        className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition"
+        onClick={() => {
+        
+          console.log("Refund requested");
+        }}
+      >
+        Refund
+      </button>
+      <button
+        className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+        onClick={() => {
+          
+          navigate(`/event/${event.event._id}`);
+        }}
+      >
+        Full Details
+      </button>
+    </div>
+  </div>
+)}
+
         </DialogContent>
       </Dialog>
     </>

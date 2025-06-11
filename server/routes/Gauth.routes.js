@@ -39,7 +39,7 @@ router.get('/auth/google/callback', passport.authenticate('google', { failureRed
     }
 
    
-    const token = jwt.sign({ email: user.email, userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
+    const token = jwt.sign({ email: user.email, userId: user._id ,role:user.role }, process.env.JWT_SECRET, { expiresIn: '1d' });
 
    
     res.cookie('token', token, {

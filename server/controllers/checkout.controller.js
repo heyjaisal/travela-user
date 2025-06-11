@@ -328,3 +328,84 @@ exports.EventcapturePayment = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.requestRefund = async (req, res) => {
+  try {
+    const { bookingId } = req.body;
+    const userId = req.userId;
+
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized: User ID missing' });
+    }
+
+    if (!bookingId) {
+      return res.status(400).json({ error: 'Booking ID is required' });
+    }
+
+    const booking = await Reserve.findById(bookingId).populate('hostId');
+    if (!booking) {
+      return res.status(404).json({ error: 'Booking not found' });
+    }
+
+    if (booking.user.toString() !== userId) {
+      return res.status(403).json({ error: 'You are not allowed to refund this booking' });
+    }
+
+    const now = new Date();
+    if (now >= booking.checkIn) {
+      return res.status(400).json({ error: 'Refund not allowed after check-in date' });
+    }
+
+    if (booking.refundStatus === 'processed' || booking.paymentStatus === 'refunded') {
+      return res.status(400).json({ error: 'Booking already refunded' });
+    }
+
+    const totalAmount = booking.totalAmount;
+    const platformFee = booking.platformFee || (totalAmount * 0.04);
+    const hostCompensationPercent = 0.10;
+    const hostCompensatedAmount = Math.round(totalAmount * hostCompensationPercent);
+    const refundAmount = totalAmount - platformFee - hostCompensatedAmount;
+
+    if (!booking.transactionId) {
+      return res.status(400).json({ error: 'No payment transaction associated with this booking' });
+    }
+
+
+    const refund = await stripe.refunds.create({
+      payment_intent: booking.transactionId,
+      amount: Math.round(refundAmount * 100),
+    });
+
+    if (!booking.hostId || !booking.hostId.stripeAccountId) {
+      return res.status(500).json({ error: "Host Stripe account ID missing. Manual payout required." });
+    }
+
+    const transfer = await stripe.transfers.create({
+      amount: Math.round(hostCompensatedAmount * 100),
+      currency: "inr",
+      destination: booking.hostId.stripeAccountId,
+      transfer_group: booking.transactionId,
+    });
+
+    booking.refundStatus = 'processed';
+    booking.paymentStatus = 'refunded';
+    booking.bookingStatus = 'canceled';
+    booking.hostPayoutStatus = 'partial';
+    booking.hostCompensatedAmount = hostCompensatedAmount;
+    booking.hostTransferId = transfer.id;
+    await booking.save();
+
+    res.status(200).json({
+      success: true,
+      message: 'Refund processed and host compensated.',
+      refundAmount,
+      hostCompensatedAmount,
+      platformFee,
+      refundId: refund.id,
+      transferId: transfer.id,
+    });
+  } catch (error) {
+    console.error('Refund error:', error);
+    res.status(500).json({ error: error.message });
+  }
+};

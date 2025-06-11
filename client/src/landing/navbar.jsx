@@ -50,6 +50,7 @@ export default function NavbarComponent() {
     }
   };
 
+
   return (
     <Navbar isBordered isMenuOpen={isMenuOpen} onMenuOpenChange={setIsMenuOpen}>
       <NavbarContent className="sm:hidden" justify="start">
@@ -83,9 +84,9 @@ export default function NavbarComponent() {
       <NavbarContent justify="end" className="flex items-center gap-4">
         {userinfo ? (
           <>
-            <Link href="/post">
-              <Plus className="w-7 h-8 text-gray-600" />
-            </Link>
+            
+              <Plus className="w-7 h-8 text-gray-600" onClick={() => navigate('/post')}/>
+           
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Avatar className="cursor-pointer w-8 h-8">

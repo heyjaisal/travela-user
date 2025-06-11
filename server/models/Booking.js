@@ -11,7 +11,9 @@ const propertyBookingSchema = new mongoose.Schema({
   bookingStatus: { type: String, enum: ['pending', 'confirmed', 'canceled'], default: 'pending' },
   paymentStatus: { type: String, enum: ['on-hold', 'released', 'refunded'], default: 'on-hold' },
   refundStatus: { type: String, enum: ['requested', 'processed', 'none'], default: 'none' },
-  hostPayoutStatus: { type: String, enum: ['pending', 'completed'], default: 'pending' },
+hostCompensatedAmount: { type: Number, default: 0 },
+hostPayoutStatus: { type: String, enum: ['pending', 'partial', 'completed', 'canceled'], default: 'pending' },
+
   transactionId: { type: String, required: true },
   qrCode: { type: String },
   Nights: { type: Number, default:1},

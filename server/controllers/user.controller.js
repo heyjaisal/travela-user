@@ -7,6 +7,7 @@ const Review = require("../models/Review");
 const { default: mongoose } = require("mongoose");
 const Report = require("../models/Report");
 
+
 exports.searchUser = async (req, res) => {
   try {
     const { searchTerm } = req.body;
@@ -65,8 +66,8 @@ exports.userDetails = async (req, res) => {
     const isHost = type === "host";
     const Model = isHost ? Host : User;
     const fields = isHost
-      ? "image firstName lastName username country email gender followers"
-      : "image firstName lastName username followers country gender email";
+      ? "_id image firstName lastName username country email gender followers"
+      : " _id image firstName lastName username followers country gender email";
 
     const user = await Model.findById(id).select(fields).lean();
 
@@ -308,3 +309,4 @@ exports.ReportContent = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 }
+

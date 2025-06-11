@@ -38,6 +38,29 @@ const ProfilePage = () => {
     fetchUserDetails();
   }, [id]);
 
+    const handleMessage = async () => {
+  if (!userInfo) {
+    setShowLoginModal(true);
+    return;
+  }
+  try {
+    const { data } = await axiosInstance.post(
+      "/chat/conversations",
+      {
+        participantId: user._id,
+        participantModel: "Host", 
+      },
+      { withCredentials: true }
+    );
+
+    navigate("/messages"); 
+   
+  } catch (error) {
+    console.error("Error starting conversation:", error);
+  }
+};
+
+
   const fetchListings = async () => {
     if (isLoading.current) return;
     isLoading.current = true;
@@ -125,7 +148,7 @@ const ProfilePage = () => {
           >
             {isFollowing ? "Unfollow" : "Follow"}
           </button>
-          <button className="border py-2 px-4 rounded-lg">Message</button>
+          <button className="border py-2 px-4 rounded-lg" onClick={handleMessage}>Message</button>
         </div>
       </div>
     );

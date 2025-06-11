@@ -14,13 +14,14 @@ const Signup = lazy(() => import("./auth/Signup"));
 const Login = lazy(() => import("./auth/Login"));
 const Home = lazy(() => import("./pages/Home"));
 const People = lazy(() => import("./pages/people"));
-const Messages = lazy(() => import("./pages/Messages"));
+const Messages = lazy(() => import("./chat/chatpage"));
 const Booking = lazy(() => import("./pages/Booking"));
 const BlogPost = lazy(() => import("./blog/post"));
 const BlogDetail = lazy(() => import("./blog/blog"));
 const Payment = lazy(() => import("./pages/Payment"));
 const Notification = lazy(() => import("./pages/Notification"));
 const Booked = lazy(() => import("./pages/Booked"));
+const BookedDetails = lazy(() => import("./booked/booked-details"));
 const Profile = lazy(() => import("./pages/profile"));
 const Account = lazy(() => import("./pages/Account"));
 const UserProfile = lazy(() => import("./users/user-profile"));
@@ -28,7 +29,7 @@ const HostProfile = lazy(() => import("./users/host-profile"));
 const EventPage = lazy(() => import("./event/event-page"));
 const PropertyPage = lazy(() => import("./property/property-page"));
 const AboutUs = lazy(() => import("./landing/about-us"));
-const Saved = lazy(() => import("./app/saved"));
+const Saved = lazy(() => import("./saved/saved"));
 const Fallback = lazy(() => import("./components/fallback"));
 const ECheckout = lazy(() => import("./event/succes"));
 
@@ -96,6 +97,7 @@ const App = () => {
                   <Route path="/payment" element={<Payment />} />
                   <Route path="/notification" element={<Notification />} />
                   <Route path="/booked" element={<Booked />} />
+                   <Route path="/booked/:type/:id" element={<BookedDetails />} />
                   <Route path="/profile" element={<Profile />} />
                   <Route path="/account" element={<Account />} />
                   <Route path="/saved" element={<Saved />} />

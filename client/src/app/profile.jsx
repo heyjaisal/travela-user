@@ -9,7 +9,14 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { ScaleLoader } from "react-spinners";
 
 const ProfileDialog = () => {
@@ -17,6 +24,7 @@ const ProfileDialog = () => {
   const dispatch = useDispatch();
   const userinfo = useSelector((state) => state.auth.userInfo);
   const fileInputRef = useRef(null);
+
   const [image, setImage] = useState(userinfo?.image || null);
   const [loading, setLoading] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -30,17 +38,25 @@ const ProfileDialog = () => {
     email: "",
   });
 
+  const [dialogOpen, setDialogOpen] = useState(false);
+
   useEffect(() => {
+    if (!dialogOpen) return; // fetch only when dialog opens
+
     const fetchData = async () => {
       try {
-        const response = await axiosInstance.get(`/auth/profile`, { withCredentials: true });
+        const response = await axiosInstance.get(`/auth/profile`, {
+          withCredentials: true,
+        });
         setProfileData(response.data);
+        setImage(response.data.image || null);
       } catch (error) {
         toast.error("Failed to fetch user data");
       }
     };
+
     fetchData();
-  }, []);
+  }, [dialogOpen]);
 
   const handleFieldChange = (e) => {
     const { name, value } = e.target;
@@ -61,29 +77,34 @@ const ProfileDialog = () => {
   };
 
   const handleSave = async () => {
-    if (validateFields()) {
-      setLoading(true);
-      try {
-        const { data } = await axiosInstance.put(
-          `/auth/profile`,
-          profileData,
-          { withCredentials: true }
-        );
-        dispatch(setUserInfo(data.user));
-        toast.success("Profile details submitted successfully!");
-      } catch (error) {
-        toast.error("Failed to update profile");
-      } finally {
-        setLoading(false);
-      }
+    if (!validateFields()) return;
+
+    setLoading(true);
+    try {
+      const { data } = await axiosInstance.put(`/auth/profile`, profileData, {
+        withCredentials: true,
+      });
+      dispatch(setUserInfo(data.user));
+      toast.success("Profile details submitted successfully!");
+      setDialogOpen(false);
+    } catch (error) {
+      toast.error("Failed to update profile");
+    } finally {
+      setLoading(false);
     }
   };
-  
+
   const logOut = async () => {
-    const response = await axiosInstance.get(`/auth/logout`, { withCredentials: true });
-    if (response.status === 200) {
-      dispatch(setUserInfo(undefined));
-      navigate("/");
+    try {
+      const response = await axiosInstance.get(`/auth/logout`, {
+        withCredentials: true,
+      });
+      if (response.status === 200) {
+        dispatch(setUserInfo(undefined));
+        navigate("/");
+      }
+    } catch (error) {
+      toast.error("Logout failed");
     }
   };
 
@@ -137,88 +158,138 @@ const ProfileDialog = () => {
   };
 
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline">Profile</Button>
-      </DialogTrigger>
-      <DialogContent className="max-w-md w-full px-4 py-6 sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="text-lg font-semibold text-center">Edit Profile</DialogTitle>
-        </DialogHeader>
+    <>
+      {/* Disable background interaction when dialog is open */}
+      <div inert={dialogOpen ? "" : undefined}>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button variant="outline">Profile</Button>
+          </DialogTrigger>
 
-        {/* Profile Picture */}
-        <div className="flex flex-col items-center">
-          <div className="relative w-24 h-24 rounded-full border flex items-center justify-center bg-gray-200"
-               onMouseEnter={() => setHovered(true)}
-               onMouseLeave={() => setHovered(false)}>
-            <Avatar className="w-24 h-24 rounded-full">
-              {image ? <AvatarImage src={image} alt="profile" className="object-cover w-full h-full" /> :
-                <div className="flex items-center justify-center w-full h-full text-5xl font-bold">
-                  {profileData.firstName?.charAt(0)}
-                </div>}
-            </Avatar>
-            {hovered && (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer"
-                   onClick={image ? deleteImage : () => fileInputRef.current.click()}>
-                {image ? <FaTrash className="text-white text-3xl" /> : <FaPlus className="text-white text-3xl" />}
+          <DialogContent
+            className="max-w-md w-full px-4 py-6 sm:max-w-lg"
+            aria-describedby="profile-dialog-description"
+          >
+            <DialogHeader>
+              <DialogTitle className="text-lg font-semibold text-center">
+                Edit Profile
+              </DialogTitle>
+              <DialogDescription id="profile-dialog-description" className="sr-only">
+                Edit your profile information and upload a profile picture.
+              </DialogDescription>
+            </DialogHeader>
+
+            {/* Profile Picture */}
+            <div className="flex flex-col items-center mb-4">
+              <div
+                className="relative w-24 h-24 rounded-full border flex items-center justify-center bg-gray-200"
+                onMouseEnter={() => setHovered(true)}
+                onMouseLeave={() => setHovered(false)}
+              >
+                <Avatar className="w-24 h-24 rounded-full">
+                  {image ? (
+                    <AvatarImage src={image} alt="profile" className="object-cover w-full h-full" />
+                  ) : (
+                    <div className="flex items-center justify-center w-full h-full text-5xl font-bold">
+                      {profileData.firstName?.charAt(0) || "?"}
+                    </div>
+                  )}
+                </Avatar>
+
+                {hovered && (
+                  <div
+                    className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full cursor-pointer"
+                    onClick={image ? deleteImage : () => fileInputRef.current.click()}
+                    aria-label={image ? "Delete profile image" : "Upload profile image"}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        image ? deleteImage() : fileInputRef.current.click();
+                      }
+                    }}
+                  >
+                    {image ? (
+                      <FaTrash className="text-white text-3xl" />
+                    ) : (
+                      <FaPlus className="text-white text-3xl" />
+                    )}
+                  </div>
+                )}
+
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleImage}
+                  accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
+                />
               </div>
-            )}
-            <input
-              type="file"
-              ref={fileInputRef}
-              className="hidden"
-              onChange={handleImage}
-              accept="image/png, image/jpeg, image/jpg, image/webp, image/svg+xml"
-            />
-          </div>
-        </div>
-
-=
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
-          {['username', 'firstName', 'lastName', 'city', 'country', 'email'].map((field, index) => (
-            <div key={index}>
-              <Label>{field.charAt(0).toUpperCase() + field.slice(1)}</Label>
-              <Input 
-                name={field} 
-                value={profileData[field]} 
-                onChange={handleFieldChange} 
-                disabled={field === 'email'}
-              />
-              {errors[field] && <div className="text-red-500 text-sm">{errors[field]}</div>}
             </div>
-          ))}
-        </div>
 
-        <div className="flex justify-end space-x-2 mt-3">
-          <Button 
-            className="bg-blue-500 text-white px-3 py-1 text-sm" 
-            onClick={handleSave} 
-            disabled={loading}>
-           {loading ? ( <svg
-              className="animate-spin h-5 w-5 text-white"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8v2a6 6 0 100 12v2a8 8 0 01-8-8z"
-              />
-            </svg>) : "Save"}
-          </Button>
-          <Button 
-            className="bg-red-500 text-white px-3 py-1 text-sm" 
-            variant="destructive" 
-            onClick={logOut}>
-            Logout
-          </Button>
-        </div>
+            {/* Profile Fields */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {[
+                "username",
+                "firstName",
+                "lastName",
+                "city",
+                "country",
+                "email",
+              ].map((field, index) => (
+                <div key={index}>
+                  <Label htmlFor={field}>
+                    {field.charAt(0).toUpperCase() + field.slice(1)}
+                  </Label>
+                  <Input
+                    id={field}
+                    name={field}
+                    value={profileData[field]}
+                    onChange={handleFieldChange}
+                    disabled={field === "email"}
+                    aria-invalid={errors[field] ? "true" : "false"}
+                    aria-describedby={errors[field] ? `${field}-error` : undefined}
+                  />
+                  {errors[field] && (
+                    <p
+                      id={`${field}-error`}
+                      className="text-red-500 text-sm mt-1"
+                      role="alert"
+                    >
+                      {errors[field]}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
 
-        <ToastContainer />
-      </DialogContent>
-    </Dialog>
+            {/* Buttons */}
+            <div className="flex justify-end space-x-2 mt-6">
+              <Button
+                className="bg-blue-500 text-white px-3 py-1 text-sm flex items-center justify-center"
+                onClick={handleSave}
+                disabled={loading}
+                aria-disabled={loading}
+                type="button"
+              >
+                {loading ? <ScaleLoader height={15} width={3} color="#fff" /> : "Save"}
+              </Button>
+              <Button
+                className="bg-red-500 text-white px-3 py-1 text-sm"
+                variant="destructive"
+                onClick={logOut}
+                type="button"
+              >
+                Logout
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <ToastContainer />
+    </>
   );
 };
 

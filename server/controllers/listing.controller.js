@@ -1,6 +1,8 @@
 const Events = require("../models/Event");
 const User = require("../models/User");
 const Blog = require("../models/Blog");
+const Report = require("../models/Report");
+const Content = require("../models/Content");
 const Property = require("../models/Property");
 const Booking = require("../models/Booking");
 const Reserve = require("../models/Booking");
@@ -156,6 +158,49 @@ exports.listing = async (req, res) => {
   }
 };
 
+exports.listReports = async (req, res) => {
+  const { page = 1, limit = 10, search = "" } = req.query;
+  const skip = (Number(page) - 1) * Number(limit);
+
+  try {
+    const reports = await Report.find()
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean();
+
+    const total = await Report.countDocuments();
+
+    const populatedReports = await Promise.all(
+      reports.map(async (report) => {
+        let content;
+        if (report.contentType === "Event") {
+          content = await Event.findById(report.contentId).select("title images");
+        } else if (report.contentType === "Property") {
+          content = await Property.findById(report.contentId).select("title images");
+        }
+
+    
+        const matchesSearch =
+          content?.title?.toLowerCase().includes(search.toLowerCase()) ||
+          report.reasons.some((r) =>
+            r.toLowerCase().includes(search.toLowerCase())
+          );
+
+        return matchesSearch ? { ...report, content } : null;
+      })
+    );
+
+    const filtered = populatedReports.filter(Boolean);
+    const hasMore = skip + filtered.length < total;
+
+    res.json({ reports: filtered, hasMore });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server Error" });
+  }
+};
+
 exports.detailList = async (req, res) => {
   const { id } = req.params;
   const { type } = req.query;
@@ -277,6 +322,157 @@ exports.hostProfileLising = async (req, res) => {
     res.json({ listings, hasMore, type });
   } catch (error) {
     console.error("Error fetching listings:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.getHomepageContent = async (req, res) => {
+  try {
+    const content = await Content.findOne();
+    if (!content) {
+      return res.status(404).json({ message: "Homepage content not found" });
+    }
+    res.json(content);
+  } catch (error) {
+    console.error("Error fetching homepage content:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.updateHomepageContent = async (req, res) => {
+  try {
+    const { cardItems, testimonialList, faqList } = req.body;
+    let content = await Content.findOne();
+
+    if (!content) {
+      content = new Content({
+        cardItems,
+        testimonialList,
+        faqList,
+      });
+    } else {
+      content.cardItems = cardItems;
+      content.testimonialList = testimonialList;
+      content.faqList = faqList;
+    }
+
+    await content.save();
+    res.json(content);
+  } catch (error) {
+    console.error("Error updating homepage content:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+exports.getBookingDetailsById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { type } = req.query;
+
+    console.log("Booking ID:", id);
+    console.log("Booking Type:", type);
+    
+    if (!type || !["property", "event"].includes(type)) {
+      return res.status(400).json({ message: "Valid type is required (property or event)" });
+    }
+
+    let booking;
+
+    if (type === "property") {
+      booking = await Booking.findById(id)
+        .select("_id checkIn checkOut guests totalAmount transactionId platformFee isCheckedIn qrCode createdAt")
+        .populate("property", "propertyType title description price country city address images amenities")
+        .populate("hostId", "username email image phone")
+        .lean();
+    } else if (type === "event") {
+      booking = await Ticket.findById(id)
+        .select("_id ticketsBooked totalAmount bookingStatus paymentStatus refundStatus isCheckedIn transactionId qrCode createdAt")
+        .populate("event", "eventType title description eventVenue ticketPrice country city date time images")
+        .populate("hostId", "username email image phone")
+        .lean();
+    }
+
+    if (!booking) {
+      return res.status(404).json({ message: "Booking not found" });
+    }
+
+    return res.json({ type, booking });
+  } catch (error) {
+    console.error("Error fetching booking by ID:", error);
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+exports.savedListing = async (req, res) => {
+  try {
+    const { type, page = 1, limit = 6 } = req.query;
+    const userId = req.userId;
+
+    if (!type) {
+      return res.status(400).json({ message: "Listing type is required" });
+    }
+
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.max(1, parseInt(limit, 10) || 6);
+    const skip = (pageNum - 1) * limitNum;
+
+    let listings = [];
+    let totalListings = 0;
+
+    if (type === "blog") {
+      totalListings = await Blog.countDocuments({ saves: userId });
+
+      const blogs = await Blog.find({ saves: userId })
+        .sort({ createdAt: -1 })
+        .select("title thumbnail createdAt author location likes saves categories")
+        .populate("author", "username image")
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+
+      listings = blogs.map((blog) => ({
+        ...blog,
+        isLiked: userId && blog.likes?.some((id) => id.toString() === userId),
+        likeCount: blog.likes?.length || 0,
+        isSaved: true, // since we're only fetching saved blogs
+      }));
+    } else if (type === "property") {
+      totalListings = await Property.countDocuments({ saves: userId });
+
+      const properties = await Property.find({ saves: userId })
+        .sort({ createdAt: -1 })
+        .select("propertyType averageRating images price country city saves")
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+
+      listings = properties.map((property) => ({
+        ...property,
+        isSaved: true,
+      }));
+    } else if (type === "event") {
+      totalListings = await Events.countDocuments({ saves: userId });
+
+      const events = await Events.find({ saves: userId })
+        .sort({ createdAt: -1 })
+        .select("title images averageRating eventVenue country ticketPrice city saves")
+        .skip(skip)
+        .limit(limitNum)
+        .lean();
+
+      listings = events.map((event) => ({
+        ...event,
+        isSaved: true,
+      }));
+    } else {
+      return res.status(400).json({ message: "Invalid listing type" });
+    }
+
+    const hasMore = skip + listings.length < totalListings;
+
+    res.json({ listings, hasMore, type });
+  } catch (error) {
+    console.error("Error fetching saved listings:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };

@@ -1,6 +1,7 @@
 const User = require("../models/User");
 const Blog = require("../models/Blog");
 const cloudinary = require("../config/cloudinary");
+const Content = require("../models/Content");
 
 
 exports.uploadImage = async (req, res) => {
@@ -113,3 +114,4 @@ exports.BlogPost = async (req, res) => {
     res.status(500).json({ message: "Error saving blog.", error });
   }
 };
+
