@@ -10,9 +10,9 @@ export default function ChatLayout({ currentUser }) {
   useChatSocket(currentUser, selectedConversationId);
 
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-background">
       <ConversationList />
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col border-l">
         <MessageWindow currentUser={currentUser} />
         <MessageInput currentUser={currentUser} />
       </div>
