@@ -6,7 +6,7 @@ import PropertyList from "./listing";
 import Faqs from "./Faqs";
 import CardList from "./CardList";
 import Testimonials from "./testimonials";
-import Footer from "./Footer";
+import Footer from "./footer";
 import axiosInstance from "@/utils/axios-instance";
 
 export default function App() {
