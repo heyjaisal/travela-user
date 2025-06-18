@@ -97,7 +97,7 @@ exports.userlogin = async (req, res) => {
       return res.status(401).json({ error: "The password is incorrect" });
     }
 
-    // Add role to the token payload
+    // Generate JWT token
     const token = jwt.sign(
       { 
         email: user.email, 
@@ -108,14 +108,17 @@ exports.userlogin = async (req, res) => {
       { expiresIn: "1d" }
     );
 
+    // Set secure cookie for cross-subdomain
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 60 * 60 * 24 * 30 * 5 * 1000,
+      secure: process.env.NODE_ENV === "production", // must be true on Railway/Vercel
+      sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
+      domain: process.env.NODE_ENV === "production" ? ".jaisal.blog" : undefined,
+      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
       path: "/",
     });
 
+    // Return basic user data
     res.status(200).json({
       user: {
         id: user._id,
@@ -129,14 +132,16 @@ exports.userlogin = async (req, res) => {
         street: user.street,
         city: user.city,
         gender: user.gender,
-        role: user.role || 'User', // Optionally return role in response
+        role: user.role || 'User',
       },
     });
+
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 exports.updateprofile = async (req, res) => {
   const { firstName, lastName, username, country, city } = req.body;
