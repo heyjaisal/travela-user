@@ -24,8 +24,8 @@ const server = http.createServer(app);
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5175',
-  process.env.CLIENT_URL,
-  process.env.HOST_CLIENT_URL
+  'https://user.jaisal.blog',
+  'https://host.jaisal.blog',
 ];
 
 const io = new Server(server, {
