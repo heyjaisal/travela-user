@@ -28,6 +28,7 @@ const allowedOrigins = [
   'https://host.jaisal.blog',
 ];
 
+
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -36,25 +37,32 @@ const io = new Server(server, {
 });
 
 app.set('io', io);
-app.set('trust proxy', 1);
+app.set('trust proxy', 1); 
 
-app.use(cors({ origin: allowedOrigins, credentials: true }));
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true,
+}));
 app.use(cookieParser());
 app.use(session({
   secret: process.env.SESSION_SECRET || 'keyboard cat',
   resave: false,
   saveUninitialized: false,
   cookie: {
+    httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
+    domain: process.env.NODE_ENV === 'production' ? '.jaisal.blog' : undefined,
   },
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+
 require('./config/passport');
 app.use(passport.initialize());
 app.use(passport.session());
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api', uploadRoute);
@@ -65,7 +73,9 @@ app.use('/api/checkout', checkout);
 app.use('/api/chat', chatRoutes);
 app.use(authRoute);
 
+
 setupSocketServer(io);
+
 
 const startServer = async () => {
   try {
