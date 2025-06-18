@@ -12,6 +12,7 @@ import logo from "../assets/logo.png";
 const LoginForm = ({ className, ...props }) => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const baseURL = import.meta.env.VITE_API_URL;
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,7 +61,7 @@ const LoginForm = ({ className, ...props }) => {
   };
 
   const handleGoogleSignup = () => {
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href =`${baseURL}/auth/google`;
   };
 
   return (
