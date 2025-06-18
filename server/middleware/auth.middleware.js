@@ -4,6 +4,8 @@ require('dotenv').config();
 const CheckMiddleware = (req, res, next) => {
   const token = req.cookies.token || req.headers.authorization?.split(' ')[1];
 
+  console.log(token,'token');
+  
   if (!token) {
     return next();
   }
