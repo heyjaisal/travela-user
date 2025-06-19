@@ -96,8 +96,7 @@ exports.userlogin = async (req, res) => {
     if (!isMatch) {
       return res.status(401).json({ error: "The password is incorrect" });
     }
-
-    // Generate JWT token
+  
     const token = jwt.sign(
       { 
         email: user.email, 
@@ -108,17 +107,16 @@ exports.userlogin = async (req, res) => {
       { expiresIn: "1d" }
     );
 
-    // Set secure cookie for cross-subdomain
     res.cookie("token", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production", // must be true on Railway/Vercel
+      secure: process.env.NODE_ENV === "production", 
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
       domain: process.env.NODE_ENV === "production" ? ".jaisal.blog" : undefined,
-      maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      maxAge: 30 * 24 * 60 * 60 * 1000, 
       path: "/",
     });
 
-    // Return basic user data
+    
     res.status(200).json({
       user: {
         id: user._id,
