@@ -77,6 +77,7 @@ exports.eventCheckoutSession = async (req, res) => {
   }
 };
 
+
 exports.propertyCheckoutSession = async (req, res) => {
   const userId = req.userId;
 
