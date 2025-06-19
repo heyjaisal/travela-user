@@ -32,6 +32,8 @@ const Signup = () => {
   const [error, setError] = useState({});
   const [showOtpPopup, setShowOtpPopup] = useState(false);
 
+   const baseURL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     if (userInfo) {
       navigate("/home");
@@ -113,7 +115,7 @@ const Signup = () => {
   };
 
   const handleGoogleSignup = () => {
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = `${baseURL}/auth/google`;
   };
 
   return (

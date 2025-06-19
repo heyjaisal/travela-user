@@ -34,6 +34,8 @@ function PropertyPage() {
   const [newRating, setNewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
 
+   const baseURL = import.meta.env.VITE_API_URL;
+
   useEffect(() => {
     const fetchProperty = async () => {
       try {
@@ -175,7 +177,7 @@ function PropertyPage() {
   };
 
   const handleGoogleSignup = () => {
-    window.location.href = "http://localhost:5000/auth/google";
+    window.location.href = `${baseURL}/auth/google`;
   };
 
   if (!property) return <p className="text-center mt-10">Loading...</p>;
