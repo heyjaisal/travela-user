@@ -165,7 +165,7 @@ exports.updateprofile = async (req, res) => {
 
     await user.save();
 
-    res.json({ message: "Profile updated successfully", user });
+    res.json({ message: "Profile updated successfullyy", user });
   } catch (error) {
     console.error("Error updating profile:", error);
     res.status(500).json({ message: "Server error" });
