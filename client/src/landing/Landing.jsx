@@ -2,6 +2,8 @@ import { Card, CardHeader, CardFooter, Image, Button } from "@heroui/react";
 import { Link } from "react-router-dom";
 
 export default function CardList({ cardItems }) {
+  if (!cardItems || !Array.isArray(cardItems)) return null; // safeguard
+
   return (
     <div className="max-w-[900px] gap-2 grid grid-cols-12 grid-rows-2 px-8">
       {cardItems.map((item) => (
@@ -21,7 +23,9 @@ export default function CardList({ cardItems }) {
                 removeWrapper
                 alt={item.title}
                 className={`z-0 w-full h-full object-cover ${
-                  item._id === "68316dbd92f2064c9b3516ca" ? "scale-125 -translate-y-6" : ""
+                  item._id === "68316dbd92f2064c9b3516ca"
+                    ? "scale-125 -translate-y-6"
+                    : ""
                 }`}
                 src={item.image}
               />
