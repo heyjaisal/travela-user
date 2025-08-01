@@ -1,26 +1,27 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const passport = require('passport');
 const session = require('express-session');
+const passport = require('passport');
 const cookieParser = require('cookie-parser');
 const cors = require('cors');
 const http = require('http');
 const { Server } = require('socket.io');
 require('dotenv').config();
 
-const authRoute = require('./routes/Gauth.routes');
 const authRoutes = require('./routes/auth.routes');
+const gauthRoutes = require('./routes/Gauth.routes');
 const uploadRoute = require('./routes/upload.routes');
 const blogRoutes = require('./routes/blog.routes');
 const listingRoutes = require('./routes/listing.routes');
 const userRoutes = require('./routes/user.routes');
 const chatRoutes = require('./routes/messages.routes');
-const checkout = require('./routes/checkout.routes');
+const checkoutRoutes = require('./routes/checkout.routes');
 const setupSocketServer = require('./sockets');
 
 const app = express();
 const server = http.createServer(app);
 
+// ✅ Allowed Origins
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5175',
@@ -28,48 +29,44 @@ const allowedOrigins = [
   'https://host.jaisal.blog',
 ];
 
-// ✅ CORS middleware (must be before routes)
+// ✅ CORS Configuration
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow requests with no origin (e.g. mobile apps or curl)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.includes(origin)) return callback(null, true);
-    return callback(new Error('Not allowed by CORS'));
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
   },
   credentials: true,
 }));
-
-// ✅ Handle preflight requests (important for cookies/session)
 app.options('*', cors({
   origin: allowedOrigins,
   credentials: true,
 }));
 
-// ✅ Express core middleware
-app.set('trust proxy', 1); // Trust reverse proxy (Render, Vercel, etc.)
+// ✅ Middleware
+app.set('trust proxy', 1); // Trust reverse proxy
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ✅ Session handling
+// ✅ Session
 app.use(session({
   secret: process.env.SESSION_SECRET || 'keyboard cat',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', // Must be true on HTTPS
+    secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    domain: process.env.NODE_ENV === 'production' ? '.jaisal.blog' : undefined, // share across subdomains
+    domain: process.env.NODE_ENV === 'production' ? '.jaisal.blog' : undefined,
   },
 }));
 
-// ✅ Passport config
+// ✅ Passport Auth
 require('./config/passport');
 app.use(passport.initialize());
 app.use(passport.session());
 
-// ✅ Socket.IO setup
+// ✅ Socket.IO
 const io = new Server(server, {
   cors: {
     origin: allowedOrigins,
@@ -79,22 +76,20 @@ const io = new Server(server, {
 app.set('io', io);
 setupSocketServer(io);
 
-// ✅ API routes
+// ✅ Routes
 app.use('/api/auth', authRoutes);
 app.use('/api', uploadRoute);
 app.use('/api/blogs', blogRoutes);
 app.use('/api/user', userRoutes);
 app.use('/api/listing', listingRoutes);
-app.use('/api/checkout', checkout);
+app.use('/api/checkout', checkoutRoutes);
 app.use('/api/chat', chatRoutes);
-app.use(authRoute); // Google Auth
+app.use(gauthRoutes); // Google OAuth
 
-// ✅ Health check
-app.get('/health', (req, res) => {
-  res.send({ status: 'ok' });
-});
+// ✅ Health Check
+app.get('/health', (_, res) => res.send({ status: 'ok' }));
 
-// ✅ MongoDB + Start server
+// ✅ DB Connection + Server Start
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -105,7 +100,7 @@ const startServer = async () => {
       console.log(`[Server] 🚀 Listening on port ${PORT}`);
     });
   } catch (err) {
-    console.error('[DB] ❌ MongoDB connection failed:', err.message);
+    console.error('[DB] ❌ Connection error:', err.message);
     process.exit(1);
   }
 };
