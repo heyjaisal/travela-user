@@ -28,42 +28,58 @@ const allowedOrigins = [
   'https://host.jaisal.blog',
 ];
 
-
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    credentials: true,
-  },
-});
-
-app.set('io', io);
-app.set('trust proxy', 1); 
-
+// ✅ CORS middleware (must be before routes)
 app.use(cors({
+  origin: function (origin, callback) {
+    // Allow requests with no origin (e.g. mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+}));
+
+// ✅ Handle preflight requests (important for cookies/session)
+app.options('*', cors({
   origin: allowedOrigins,
   credentials: true,
 }));
+
+// ✅ Express core middleware
+app.set('trust proxy', 1); // Trust reverse proxy (Render, Vercel, etc.)
 app.use(cookieParser());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// ✅ Session handling
 app.use(session({
   secret: process.env.SESSION_SECRET || 'keyboard cat',
   resave: false,
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
+    secure: process.env.NODE_ENV === 'production', // Must be true on HTTPS
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    domain: process.env.NODE_ENV === 'production' ? '.jaisal.blog' : undefined,
+    domain: process.env.NODE_ENV === 'production' ? '.jaisal.blog' : undefined, // share across subdomains
   },
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-
+// ✅ Passport config
 require('./config/passport');
 app.use(passport.initialize());
 app.use(passport.session());
 
+// ✅ Socket.IO setup
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    credentials: true,
+  },
+});
+app.set('io', io);
+setupSocketServer(io);
 
+// ✅ API routes
 app.use('/api/auth', authRoutes);
 app.use('/api', uploadRoute);
 app.use('/api/blogs', blogRoutes);
@@ -71,12 +87,14 @@ app.use('/api/user', userRoutes);
 app.use('/api/listing', listingRoutes);
 app.use('/api/checkout', checkout);
 app.use('/api/chat', chatRoutes);
-app.use(authRoute);
+app.use(authRoute); // Google Auth
 
+// ✅ Health check
+app.get('/health', (req, res) => {
+  res.send({ status: 'ok' });
+});
 
-setupSocketServer(io);
-
-
+// ✅ MongoDB + Start server
 const startServer = async () => {
   try {
     await mongoose.connect(process.env.MONGO_URI);
