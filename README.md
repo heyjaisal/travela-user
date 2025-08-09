@@ -1,4 +1,4 @@
- # 🌍 Full-Stack Travel Booking Platform
+# 🌍 Full-Stack Travel Booking Platform
 
 A complete **MERN stack** travel booking platform with **real-time chat (Socket.IO)**, **Stripe payments**, and **dual-role support** for **Travelers** and **Hosts**.  
 Built with production-quality code, modular structure, and scalability in mind.
@@ -7,11 +7,6 @@ Built with production-quality code, modular structure, and scalability in mind.
 
 ## 📌 Features
 
-### 👥 Two Independent Portals
-- **For Travelers** 🧳 – Browse listings, chat with hosts, book trips, and leave reviews.
-- **For Hosts** 🏡 – List properties or experiences, manage bookings, chat in real time, and track earnings.
-
-### 💼 Core Highlights
 - 💬 **Real-Time Chat (Socket.IO)** – User ↔ Host, User ↔ User, Host ↔ Host
 - 🖥 **Dual Frontend Architecture** – Separate apps for User & Host
 - 💳 **Stripe Payments** – Secure checkout with refund support
@@ -25,13 +20,9 @@ Built with production-quality code, modular structure, and scalability in mind.
 
 ---
 
-## 🖼 Screenshots
+## 🖼 Preview
 
-| Travelers Portal | Hosts Portal |
-|------------------|--------------|
-| ![Travelers UI](screenshots/travelers.png) | ![Hosts UI](screenshots/hosts.png) |
-
-*(Add your own screenshots in a `/screenshots` folder)*
+![Travel App UI](https://res.cloudinary.com/dzfdpc00p/image/upload/v1754767873/Screenshot_2025-08-10_005848_eggpu8.png)
 
 ---
 
