@@ -40,5 +40,5 @@ Built with production-quality code, modular structure, and scalability in mind.
 
 ### 1️⃣ Clone the Repository
 ```bash
-git clone https://github.com/your-username/your-repo.git
+git clone https://github.com/heyjaisal/travela-user.git
 cd your-repo
