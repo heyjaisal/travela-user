@@ -73,6 +73,7 @@ exports.verifyOtp = async (req, res) => {
     res.status(500).json({ error: "Error verifying OTP" });
   }
 };
+
 exports.userlogin = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -81,7 +82,7 @@ exports.userlogin = async (req, res) => {
       return res.status(400).json({ error: "Email and password are required" });
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
       return res.status(404).json({ error: "User not found" });
@@ -97,21 +98,21 @@ exports.userlogin = async (req, res) => {
     }
 
     const token = jwt.sign(
-      {
-        email: user.email,
+      { 
+        email: user.email, 
         userId: user._id,
-        role: user.role || "User",
+        role: user.role || 'User'
       },
       process.env.JWT_SECRET,
       { expiresIn: "1d" }
     );
 
-    // ✅ Set cookie without forcing domain (will work on Render domain)
+
     res.cookie("token", token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-      maxAge: 30 * 24 * 60 * 60 * 1000,
+      maxAge: 30 * 24 * 60 * 60 * 1000, 
       path: "/",
     });
 
@@ -128,14 +129,16 @@ exports.userlogin = async (req, res) => {
         street: user.street,
         city: user.city,
         gender: user.gender,
-        role: user.role || "User",
+        role: user.role || 'User',
       },
     });
+
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
 
 
 exports.updateprofile = async (req, res) => {
