@@ -43,12 +43,12 @@ app.options('*', cors({
 }));
 
 // ✅ Middleware
-app.set('trust proxy', 1); // Trust reverse proxy
+app.set('trust proxy', 1); // Trust reverse proxy for cookies
 app.use(cookieParser());
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// ✅ Session
+// ✅ Session (fixed domain issue)
 app.use(session({
   secret: process.env.SESSION_SECRET || 'keyboard cat',
   resave: false,
@@ -57,7 +57,7 @@ app.use(session({
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-    domain: process.env.NODE_ENV === 'production' ? '.jaisal.blog' : undefined,
+    // ❌ Removed "domain" so cookies work on Render's domain
   },
 }));
 
